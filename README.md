@@ -21,8 +21,8 @@ the policy is chosen on days 105–120, and the test window is never used in any
 
 ## 1. Setup on Windows
 
-Install [Python 3.11+](https://www.python.org/downloads/) and tick **"Add python.exe to PATH"** in
-the installer, then open PowerShell in the project folder:
+Install [Python 3.10 or newer](https://www.python.org/downloads/) and tick
+**"Add python.exe to PATH"** in the installer, then open PowerShell in the project folder:
 
 ```powershell
 python -m venv .venv
@@ -47,6 +47,11 @@ python -m pytest tests -q
 ```
 
 Same **145 passed**. If `python3` is missing, `brew install python@3.11` first.
+
+Nothing here is pinned to a Python version and there is no optional dependency you need to chase:
+`numba` would make the offline reproduction about 14x faster on its hot loop, but every number in
+this repo is produced without it, so it stays out of `requirements.txt` rather than risking an
+install that fails on a Python it has no wheel for.
 
 ## 3. Running the full model
 
