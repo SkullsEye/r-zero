@@ -1,0 +1,600 @@
+<title>R-Zero Risk Console</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root {
+  --ground: #e9edf1;
+  --surface: #ffffff;
+  --surface-2: #f4f7f9;
+  --line: #d4dce3;
+  --line-soft: #e4eaef;
+  --ink: #0d1317;
+  --ink-2: #4a5b68;
+  --ink-3: #7b8b98;
+  --accent: #0b7285;
+  --accent-soft: #d7eef2;
+  --critical: #b02020;
+  --warning: #cc5803;
+  --good: #217a3a;
+  --heat-0: #fff3e2;
+  --heat-1: #ffc078;
+  --heat-2: #f76707;
+  --heat-3: #9c2b0e;
+  --shadow: 0 1px 2px rgba(13,19,23,.06), 0 8px 24px rgba(13,19,23,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0d1116;
+    --surface: #151b22;
+    --surface-2: #1b232c;
+    --line: #2a3540;
+    --line-soft: #212b34;
+    --ink: #e8eef3;
+    --ink-2: #9fb0be;
+    --ink-3: #6d7f8d;
+    --accent: #3bb4ca;
+    --accent-soft: #16323a;
+    --critical: #e35d5d;
+    --warning: #f08c3a;
+    --good: #4cb96a;
+    --heat-0: #2a1d10;
+    --heat-1: #8a4a12;
+    --heat-2: #e8640a;
+    --heat-3: #ff9a52;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0d1116;
+  --surface: #151b22;
+  --surface-2: #1b232c;
+  --line: #2a3540;
+  --line-soft: #212b34;
+  --ink: #e8eef3;
+  --ink-2: #9fb0be;
+  --ink-3: #6d7f8d;
+  --accent: #3bb4ca;
+  --accent-soft: #16323a;
+  --critical: #e35d5d;
+  --warning: #f08c3a;
+  --good: #4cb96a;
+  --heat-0: #2a1d10;
+  --heat-1: #8a4a12;
+  --heat-2: #e8640a;
+  --heat-3: #ff9a52;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.mono { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace; }
+.num { font-variant-numeric: tabular-nums; }
+
+.shell { max-width: 1240px; margin: 0 auto; padding: 28px 22px 64px; }
+
+header.masthead {
+  display: flex; flex-wrap: wrap; gap: 18px;
+  align-items: flex-end; justify-content: space-between;
+  padding-bottom: 18px; margin-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-mark {
+  width: 38px; height: 38px; flex: none; border-radius: 9px;
+  background: var(--accent-soft);
+  display: grid; place-items: center;
+  border: 1px solid var(--line);
+}
+.brand h1 {
+  margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.brand p { margin: 2px 0 0; color: var(--ink-2); font-size: 13px; }
+.provenance {
+  font-size: 11.5px; color: var(--ink-3); text-align: right;
+  letter-spacing: .01em; max-width: 340px;
+}
+.provenance strong { color: var(--ink-2); font-weight: 500; }
+
+.instruments {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+  gap: 12px; margin-bottom: 22px;
+}
+.instrument {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 10px; padding: 13px 15px 14px; box-shadow: var(--shadow);
+  position: relative; overflow: hidden;
+}
+.instrument::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--accent);
+}
+.instrument.is-good::before { background: var(--good); }
+.instrument.is-warn::before { background: var(--warning); }
+.instrument .label {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .09em;
+  color: var(--ink-3); font-weight: 600;
+}
+.instrument .value {
+  font-size: 27px; font-weight: 600; letter-spacing: -0.025em;
+  margin-top: 5px; line-height: 1.1;
+}
+.instrument .value small { font-size: 15px; font-weight: 500; color: var(--ink-2); }
+.instrument .foot { font-size: 11.5px; color: var(--ink-3); margin-top: 4px; }
+
+nav.tabs {
+  display: flex; gap: 2px; margin-bottom: 16px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+}
+nav.tabs button {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  font: inherit; font-size: 13.5px; font-weight: 500; color: var(--ink-2);
+  padding: 9px 15px; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; border-radius: 6px 6px 0 0;
+}
+nav.tabs button:hover { color: var(--ink); background: var(--surface-2); }
+nav.tabs button[aria-selected="true"] {
+  color: var(--accent); border-bottom-color: var(--accent);
+}
+nav.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 11px; box-shadow: var(--shadow); overflow: hidden;
+}
+.card + .card { margin-top: 16px; }
+.card-head {
+  padding: 14px 17px; border-bottom: 1px solid var(--line-soft);
+  display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+  flex-wrap: wrap;
+}
+.card-head h2 { margin: 0; font-size: 14.5px; font-weight: 600; letter-spacing: -0.01em; }
+.card-head p { margin: 0; font-size: 12px; color: var(--ink-3); }
+.card-body { padding: 17px; }
+
+.split { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 900px) { .split.two { grid-template-columns: 1.35fr 1fr; } }
+
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 720px; }
+th {
+  text-align: left; font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--ink-3); font-weight: 600;
+  padding: 9px 12px; border-bottom: 1px solid var(--line);
+  background: var(--surface-2); position: sticky; top: 0;
+}
+th.right, td.right { text-align: right; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+tr.case { cursor: pointer; }
+tr.case:hover td { background: var(--surface-2); }
+tr.case:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+tr.detail td { background: var(--surface-2); padding: 0; }
+.detail-inner { padding: 14px 16px 16px; }
+
+.stripe { display: inline-block; width: 4px; height: 22px; border-radius: 2px; vertical-align: middle; }
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600;
+  letter-spacing: .01em; border: 1px solid transparent; white-space: nowrap;
+}
+.chip.block { color: var(--critical); background: color-mix(in srgb, var(--critical) 11%, transparent); border-color: color-mix(in srgb, var(--critical) 26%, transparent); }
+.chip.review { color: var(--warning); background: color-mix(in srgb, var(--warning) 12%, transparent); border-color: color-mix(in srgb, var(--warning) 28%, transparent); }
+.chip.allow { color: var(--good); background: color-mix(in srgb, var(--good) 11%, transparent); border-color: color-mix(in srgb, var(--good) 26%, transparent); }
+.chip.truth-fraud { color: var(--critical); border-color: color-mix(in srgb, var(--critical) 34%, transparent); }
+.chip.truth-legit { color: var(--ink-3); border-color: var(--line); }
+
+.meter { height: 6px; border-radius: 3px; background: var(--line-soft); overflow: hidden; min-width: 54px; }
+.meter span { display: block; height: 100%; border-radius: 3px; }
+
+.reasons { display: grid; gap: 7px; }
+.reason {
+  display: grid; grid-template-columns: 10px 1fr auto auto; gap: 10px;
+  align-items: center; font-size: 12.5px;
+}
+.reason .dot { width: 8px; height: 8px; border-radius: 50%; }
+.reason .dot.contagion { background: var(--heat-2); }
+.reason .dot.velocity { background: var(--accent); }
+.reason .dot.base { background: var(--ink-3); }
+.reason .pct { color: var(--ink-3); font-size: 11.5px; }
+
+.legend { display: flex; gap: 15px; flex-wrap: wrap; font-size: 11.5px; color: var(--ink-2); }
+.legend i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 5px; }
+
+.controls { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+label.slider { display: grid; gap: 6px; flex: 1 1 320px; }
+label.slider span { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); font-weight: 600; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+input[type=range]:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+.readout div { background: var(--surface-2); border: 1px solid var(--line-soft); border-radius: 9px; padding: 11px 13px; }
+.readout .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); font-weight: 600; }
+.readout .v { font-size: 20px; font-weight: 600; margin-top: 3px; letter-spacing: -0.02em; }
+
+.bars { display: grid; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: 172px 1fr 54px; gap: 12px; align-items: center; font-size: 12.5px; }
+.bar-track { height: 20px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; }
+
+.note {
+  font-size: 12.5px; color: var(--ink-2); line-height: 1.65;
+  border-left: 2px solid var(--accent); padding-left: 13px; margin: 0;
+  max-width: 62ch;
+}
+.note strong { color: var(--ink); font-weight: 600; }
+
+footer.colophon {
+  margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line);
+  font-size: 11.5px; color: var(--ink-3); display: flex; gap: 16px;
+  flex-wrap: wrap; justify-content: space-between;
+}
+svg text { font-family: "IBM Plex Sans", sans-serif; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="shell">
+  <header class="masthead">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="2.4" fill="var(--accent)"/>
+          <circle cx="10" cy="10" r="6" stroke="var(--accent)" stroke-width="1.2" opacity=".55"/>
+          <circle cx="10" cy="10" r="9" stroke="var(--accent)" stroke-width="1.2" opacity=".25"/>
+        </svg>
+      </div>
+      <div>
+        <h1>R-Zero Risk Console</h1>
+        <p>Fraud spreads. This measures how fast, and acts before it does.</p>
+      </div>
+    </div>
+    <div class="provenance" id="provenance"></div>
+  </header>
+
+  <section class="instruments" id="instruments"></section>
+
+  <nav class="tabs" role="tablist" aria-label="Console views">
+    <button role="tab" aria-selected="true" data-panel="queue">Review queue</button>
+    <button role="tab" aria-selected="false" data-panel="outbreak">Outbreak</button>
+    <button role="tab" aria-selected="false" data-panel="policy">Policy</button>
+    <button role="tab" aria-selected="false" data-panel="model">Model</button>
+  </nav>
+
+  <div class="panel active" id="panel-queue">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Highest-risk transactions</h2>
+          <p>Top 60 of <span id="q-total"></span> in the held-out period. Select a row for the evidence behind it.</p>
+        </div>
+        <div class="legend">
+          <span><i style="background:var(--heat-2)"></i>contagion</span>
+          <span><i style="background:var(--accent)"></i>velocity</span>
+          <span><i style="background:var(--ink-3)"></i>transaction</span>
+        </div>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:34px"></th>
+              <th>Transaction</th>
+              <th class="right">Amount</th>
+              <th>Risk</th>
+              <th>Action</th>
+              <th>Outcome</th>
+              <th class="right">Day</th>
+            </tr>
+          </thead>
+          <tbody id="queue-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-outbreak">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Contagion intensity across the held-out period</h2>
+          <p>Average decayed proximity to confirmed fraud, against fraud actually observed.</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="scroll"><div id="timeline-chart"></div></div>
+        <p class="note" style="margin-top:16px">
+          The measured reproduction number is <strong>R₀ = 0.438</strong>: each fraud triggers
+          roughly another 0.44 within minutes, then the burst dies out. Below 1 an outbreak
+          fades on its own; above 1 it grows without limit. That half-life is the reason
+          proximity to fraud has to be measured <strong>at a moment</strong> rather than as a
+          fixed property of the graph.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-policy">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Choose an operating point</h2>
+          <p>Every setting below was evolved on days 90–120 and is scored here on days 120–182.</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="controls">
+          <label class="slider">
+            <span>Appetite — left is cautious, right is aggressive</span>
+            <input type="range" id="policy-slider" min="0" max="0" value="0" step="1">
+          </label>
+        </div>
+        <div class="readout" id="policy-readout"></div>
+        <div style="margin-top:18px" class="scroll"><div id="frontier-chart"></div></div>
+        <p class="note" style="margin-top:16px">
+          There is no single best setting. Catching more fraud always means stopping more real
+          customers, so the system returns the whole curve of defensible trade-offs and the
+          merchant picks the point. <strong>Every point on this curve is a policy that was
+          never tuned on the data it is measured against.</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-model">
+    <div class="split two">
+      <div class="card">
+        <div class="card-head"><div><h2>Where the model's decisions come from</h2>
+          <p>Share of total split gain, by feature family.</p></div></div>
+        <div class="card-body"><div class="bars" id="family-bars"></div>
+          <p class="note" style="margin-top:18px">
+            The contagion family is 27 of 124 features and carries
+            <strong id="con-share"></strong> of the model's decisions. Remove it and precision
+            in the top 100 falls from 0.89 to 0.09.
+          </p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h2>Strongest single features</h2>
+          <p>By split gain.</p></div></div>
+        <div class="card-body"><div class="bars" id="feature-bars"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h2>Held-out performance against the alternatives</h2>
+        <p>Same data, same split, same review budget.</p></div></div>
+      <div class="card-body"><div class="scroll"><div id="compare-chart"></div></div></div>
+    </div>
+  </div>
+
+  <footer class="colophon">
+    <span>IEEE-CIS · 590,540 transactions · 20,663 confirmed frauds · 182 continuous days</span>
+    <span>Cost parameters are illustrative defaults, not a merchant's own.</span>
+  </footer>
+</div>
+
+<script id="console-data" type="application/json">{"meta": {"transactions": 175998, "frauds": 6063, "baseRate": 0.03445, "exposure": 86.13, "days": [120, 182]}, "metrics": {"detector": {"pr_auc": 0.46610820473702264, "roc_auc": 0.921313426196211, "base_rate": 0.03444925510517165, "precision_at": {"100": 0.89, "500": 0.892, "1000": 0.804, "5000": 0.5492}, "recall_at_one_percent": 0.1992412996866238}, "baseline": {"pr_auc": 0.2321959129613905, "roc_auc": 0.8300507139118658, "base_rate": 0.03444925510517165, "precision_at": {"100": 0.09, "500": 0.034, "1000": 0.028, "5000": 0.3746}, "recall_at_one_percent": 0.09401286491835725}, "gain_by_family": {"base": 0.40163107177797663, "velocity": 0.2418303849599821, "contagion": 0.3565385432620413}, "sequential": {"upper": 3.999593162121551, "calibrated_rate": 0.010008762946461565, "observed_rate": 0.02141995468855739, "fraud_rate_when_blocked": 0.24402907580477673}, "frontier": {"count": 60, "spacing": 0.041574151985565036, "extent": 1.4142135623730951}, "policies": {"conservative": {"prevented": 49191379.8516, "missed": 36935032.5524, "review_spend": 607080.0, "friction_spend": 1940.0, "net_saved": 48582359.8516, "exposure": 86126412.404, "blocked": 2, "reviewed": 15177, "false_blocks": 2, "recall": 0.7047666171862115, "block_precision": 0.0}, "balanced": {"prevented": 60828979.5018, "missed": 25297432.9022, "review_spend": 704000.0, "friction_spend": 1649000.0, "net_saved": 58475979.5018, "exposure": 86126412.404, "blocked": 3972, "reviewed": 17600, "false_blocks": 1700, "recall": 0.6270823024905162, "block_precision": 0.5720040281973817}, "aggressive": {"prevented": 67176175.47510001, "missed": 18950236.928899996, "review_spend": 699600.0, "friction_spend": 3951780.0, "net_saved": 62524795.47510001, "exposure": 86126412.404, "blocked": 7333, "reviewed": 17490, "false_blocks": 4074, "recall": 0.7557314860630051, "block_precision": 0.4444292922405564}}}, "familyGain": {"base": 0.4016, "velocity": 0.2418, "contagion": 0.3565}, "topFeatures": [{"name": "client_contagion_7d", "gain": 0.1823, "family": "contagion"}, {"name": "remail_contagion_7d", "gain": 0.1584, "family": "contagion"}, {"name": "C1", "gain": 0.1082, "family": "base"}, {"name": "client_age", "gain": 0.0961, "family": "velocity"}, {"name": "C13", "gain": 0.0955, "family": "base"}, {"name": "D3", "gain": 0.0755, "family": "base"}, {"name": "addr1_amount_vs_mean", "gain": 0.0322, "family": "velocity"}, {"name": "M4_code", "gain": 0.0309, "family": "base"}, {"name": "D2", "gain": 0.023, "family": "base"}, {"name": "D15", "gain": 0.0148, "family": "base"}, {"name": "card6_code", "gain": 0.0134, "family": "base"}, {"name": "card1_age", "gain": 0.0129, "family": "velocity"}], "cases": [{"id": 3467130, "day": 143.4701, "amount": 8300.0, "score": 1.0, "probability": 0.23893, "isFraud": 0, "card": "7769", "device": "nan", "email": "nan", "product": "S", "reasons": [{"feature": "remail_contagion_7d", "value": 9.2439, "percentile": 90.0, "family": "contagion"}]}, {"id": 3421871, "day": 126.2283, "amount": 264770.0, "score": 0.99999, "probability": 0.23553, "isFraud": 1, "card": "9500", "device": "nan", "email": "yahoo.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.1929, "percentile": 99.4, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 19.6345, "percentile": 99.9, "family": "velocity"}]}, {"id": 3415532, "day": 124.3998, "amount": 9711.0, "score": 0.99999, "probability": 0.23451, "isFraud": 1, "card": "13249", "device": "nan", "email": "gmail.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.1996, "percentile": 99.4, "family": "contagion"}, {"feature": "C1", "value": 8.0, "percentile": 91.1, "family": "base"}]}, {"id": 3475631, "day": 146.5306, "amount": 9711.0, "score": 0.99998, "probability": 0.23224, "isFraud": 0, "card": "9500", "device": "nan", "email": "nan", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.0004, "percentile": 98.9, "family": "contagion"}]}, {"id": 3415531, "day": 124.399, "amount": 18758.0, "score": 0.99998, "probability": 0.23224, "isFraud": 1, "card": "13249", "device": "nan", "email": "gmail.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.1996, "percentile": 99.4, "family": "contagion"}, {"feature": "C1", "value": 8.0, "percentile": 91.1, "family": "base"}]}, {"id": 3415533, "day": 124.4006, "amount": 9711.0, "score": 0.99997, "probability": 0.23224, "isFraud": 1, "card": "13249", "device": "nan", "email": "gmail.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.1996, "percentile": 99.4, "family": "contagion"}, {"feature": "C1", "value": 8.0, "percentile": 91.1, "family": "base"}]}, {"id": 3570174, "day": 179.5571, "amount": 55112.0, "score": 0.99996, "probability": 0.2317, "isFraud": 1, "card": "13526", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.2373, "percentile": 99.5, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 4.2575, "percentile": 97.3, "family": "velocity"}, {"feature": "card1_age", "value": 179.3048, "percentile": 96.8, "family": "velocity"}]}, {"id": 3570165, "day": 179.5536, "amount": 55112.0, "score": 0.99995, "probability": 0.2317, "isFraud": 1, "card": "13526", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.2373, "percentile": 99.5, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 4.2592, "percentile": 97.3, "family": "velocity"}, {"feature": "card1_age", "value": 179.3013, "percentile": 96.7, "family": "velocity"}]}, {"id": 3462346, "day": 141.087, "amount": 82502.0, "score": 0.99997, "probability": 0.2317, "isFraud": 1, "card": "3891", "device": "nan", "email": "gmail.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 1.0503, "percentile": 99.9, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 6.9059, "percentile": 98.6, "family": "velocity"}]}, {"id": 3415997, "day": 124.6057, "amount": 69222.0, "score": 0.99995, "probability": 0.2317, "isFraud": 1, "card": "18227", "device": "nan", "email": "yahoo.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.8299, "percentile": 99.8, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 4.8515, "percentile": 97.8, "family": "velocity"}]}, {"id": 3516586, "day": 160.3267, "amount": 17098.0, "score": 0.99994, "probability": 0.23145, "isFraud": 1, "card": "17295", "device": "nan", "email": "nan", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.3868, "percentile": 99.6, "family": "contagion"}]}, {"id": 3534978, "day": 166.594, "amount": 73372.0, "score": 0.99994, "probability": 0.23144, "isFraud": 1, "card": "9749", "device": "nan", "email": "mail.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.3094, "percentile": 99.5, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 5.4491, "percentile": 98.0, "family": "velocity"}]}, {"id": 3532738, "day": 165.7542, "amount": 45982.0, "score": 0.99993, "probability": 0.23144, "isFraud": 1, "card": "9749", "device": "nan", "email": "mail.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.3362, "percentile": 99.5, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 3.4131, "percentile": 96.1, "family": "velocity"}]}, {"id": 3519663, "day": 161.5435, "amount": 31374.0, "score": 0.99993, "probability": 0.23144, "isFraud": 1, "card": "12116", "device": "nan", "email": "yahoo.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.8468, "percentile": 99.8, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 2.5863, "percentile": 94.1, "family": "velocity"}]}, {"id": 3451533, "day": 137.3276, "amount": 45982.0, "score": 0.99992, "probability": 0.23017, "isFraud": 1, "card": "13526", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 1.208, "percentile": 99.9, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 4.3717, "percentile": 97.4, "family": "velocity"}]}, {"id": 3424893, "day": 127.1123, "amount": 32370.0, "score": 0.99991, "probability": 0.23005, "isFraud": 1, "card": "1684", "device": "nan", "email": "yahoo.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.0796, "percentile": 99.3, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 2.9047, "percentile": 95.0, "family": "velocity"}]}, {"id": 3440863, "day": 133.1664, "amount": 9711.0, "score": 0.99991, "probability": 0.22974, "isFraud": 1, "card": "12970", "device": "nan", "email": "nan", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.5182, "percentile": 99.7, "family": "contagion"}]}, {"id": 3413707, "day": 123.843, "amount": 62167.0, "score": 0.9999, "probability": 0.22956, "isFraud": 1, "card": "7585", "device": "nan", "email": "nan", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.4836, "percentile": 99.6, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 4.775, "percentile": 97.7, "family": "velocity"}]}, {"id": 3405984, "day": 121.7429, "amount": 36935.0, "score": 0.99989, "probability": 0.2292, "isFraud": 1, "card": "15063", "device": "nan", "email": "nan", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.1648, "percentile": 99.4, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 2.6493, "percentile": 94.3, "family": "velocity"}]}, {"id": 3413680, "day": 123.8396, "amount": 62167.0, "score": 0.9999, "probability": 0.2292, "isFraud": 1, "card": "7585", "device": "nan", "email": "nan", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.4838, "percentile": 99.6, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 4.7763, "percentile": 97.7, "family": "velocity"}]}, {"id": 3429513, "day": 129.0359, "amount": 27805.0, "score": 0.99989, "probability": 0.2292, "isFraud": 0, "card": "6019", "device": "nan", "email": "nan", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.0028, "percentile": 99.0, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 2.1399, "percentile": 92.0, "family": "velocity"}, {"feature": "M4_code", "value": 2.0, "percentile": 90.4, "family": "base"}]}, {"id": 3537315, "day": 167.1095, "amount": 27805.0, "score": 0.99982, "probability": 0.22919, "isFraud": 1, "card": "9803", "device": "nan", "email": "hotmail.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.4228, "percentile": 99.6, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 2.8014, "percentile": 94.7, "family": "velocity"}]}, {"id": 3433160, "day": 130.587, "amount": 82502.0, "score": 0.99986, "probability": 0.22919, "isFraud": 1, "card": "14643", "device": "nan", "email": "aol.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.4143, "percentile": 99.6, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 6.8576, "percentile": 98.6, "family": "velocity"}]}, {"id": 3438460, "day": 132.4282, "amount": 45982.0, "score": 0.99985, "probability": 0.22919, "isFraud": 1, "card": "2616", "device": "nan", "email": "att.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.0074, "percentile": 99.1, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 3.8474, "percentile": 96.8, "family": "velocity"}]}, {"id": 3486977, "day": 150.7483, "amount": 36935.0, "score": 0.99985, "probability": 0.22919, "isFraud": 0, "card": "16326", "device": "nan", "email": "gmail.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.1633, "percentile": 99.4, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 3.6177, "percentile": 96.5, "family": "velocity"}, {"feature": "M4_code", "value": 2.0, "percentile": 90.4, "family": "base"}]}, {"id": 3415148, "day": 124.107, "amount": 82502.0, "score": 0.99983, "probability": 0.22919, "isFraud": 1, "card": "14643", "device": "nan", "email": "gmail.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.927, "percentile": 99.8, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 6.3091, "percentile": 98.4, "family": "velocity"}]}, {"id": 3514338, "day": 159.6322, "amount": 45982.0, "score": 0.99986, "probability": 0.22919, "isFraud": 1, "card": "12116", "device": "nan", "email": "yahoo.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 1.0232, "percentile": 99.9, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 3.784, "percentile": 96.7, "family": "velocity"}]}, {"id": 3461666, "day": 140.9322, "amount": 82502.0, "score": 0.99987, "probability": 0.22919, "isFraud": 1, "card": "3891", "device": "nan", "email": "aol.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.6316, "percentile": 99.7, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 6.9026, "percentile": 98.6, "family": "velocity"}]}, {"id": 3466019, "day": 142.8833, "amount": 73372.0, "score": 0.99988, "probability": 0.22919, "isFraud": 1, "card": "6656", "device": "nan", "email": "yahoo.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.233, "percentile": 99.5, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 6.1375, "percentile": 98.3, "family": "velocity"}]}, {"id": 3424055, "day": 126.9137, "amount": 32370.0, "score": 0.99984, "probability": 0.22919, "isFraud": 1, "card": "1684", "device": "nan", "email": "yahoo.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.5557, "percentile": 99.7, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 2.9052, "percentile": 95.0, "family": "velocity"}]}, {"id": 3454501, "day": 138.5416, "amount": 82502.0, "score": 0.99987, "probability": 0.22919, "isFraud": 1, "card": "13526", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.3437, "percentile": 99.6, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 6.396, "percentile": 98.5, "family": "velocity"}]}, {"id": 3459879, "day": 140.5463, "amount": 82502.0, "score": 0.99984, "probability": 0.22919, "isFraud": 1, "card": "7063", "device": "nan", "email": "att.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.1768, "percentile": 99.4, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 7.4142, "percentile": 98.8, "family": "velocity"}]}, {"id": 3467184, "day": 143.5153, "amount": 82502.0, "score": 0.99976, "probability": 0.22897, "isFraud": 1, "card": "2616", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 1.8754, "percentile": 100.0, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 7.4217, "percentile": 98.8, "family": "velocity"}]}, {"id": 3467196, "day": 143.5214, "amount": 82502.0, "score": 0.99981, "probability": 0.22897, "isFraud": 1, "card": "2616", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 1.8743, "percentile": 100.0, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 7.4195, "percentile": 98.8, "family": "velocity"}]}, {"id": 3418049, "day": 124.9874, "amount": 72542.0, "score": 0.99977, "probability": 0.22897, "isFraud": 1, "card": "7585", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 1.9339, "percentile": 100.0, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 5.7214, "percentile": 98.2, "family": "velocity"}]}, {"id": 3403646, "day": 120.8091, "amount": 78352.0, "score": 0.9998, "probability": 0.22897, "isFraud": 1, "card": "7585", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.5753, "percentile": 99.7, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 6.1606, "percentile": 98.4, "family": "velocity"}]}, {"id": 3409706, "day": 122.8592, "amount": 72542.0, "score": 0.99981, "probability": 0.22897, "isFraud": 1, "card": "7585", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 1.1276, "percentile": 99.9, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 5.7136, "percentile": 98.2, "family": "velocity"}]}, {"id": 3461788, "day": 140.9556, "amount": 82502.0, "score": 0.9998, "probability": 0.22897, "isFraud": 1, "card": "2616", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 1.7454, "percentile": 100.0, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 7.4153, "percentile": 98.8, "family": "velocity"}]}, {"id": 3454436, "day": 138.5181, "amount": 82502.0, "score": 0.99978, "probability": 0.22897, "isFraud": 1, "card": "2616", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 1.5397, "percentile": 99.9, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 7.3979, "percentile": 98.8, "family": "velocity"}]}, {"id": 3461799, "day": 140.9584, "amount": 82502.0, "score": 0.99978, "probability": 0.22897, "isFraud": 1, "card": "2616", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 1.745, "percentile": 100.0, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 7.4129, "percentile": 98.8, "family": "velocity"}]}, {"id": 3433215, "day": 130.6005, "amount": 82502.0, "score": 0.99975, "probability": 0.22897, "isFraud": 1, "card": "14643", "device": "nan", "email": "aol.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.4137, "percentile": 99.6, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 6.8513, "percentile": 98.6, "family": "velocity"}]}, {"id": 3433237, "day": 130.6049, "amount": 81506.0, "score": 0.99976, "probability": 0.22897, "isFraud": 1, "card": "14643", "device": "nan", "email": "aol.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.4135, "percentile": 99.6, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 6.7631, "percentile": 98.6, "family": "velocity"}]}, {"id": 3461850, "day": 140.9694, "amount": 82502.0, "score": 0.99982, "probability": 0.22897, "isFraud": 1, "card": "2616", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 1.7431, "percentile": 100.0, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 7.4106, "percentile": 98.8, "family": "velocity"}]}, {"id": 3406321, "day": 121.824, "amount": 71712.0, "score": 0.99977, "probability": 0.22897, "isFraud": 1, "card": "7585", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.5203, "percentile": 99.7, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 5.6455, "percentile": 98.1, "family": "velocity"}]}, {"id": 3414429, "day": 123.9604, "amount": 70052.0, "score": 0.99979, "probability": 0.22897, "isFraud": 1, "card": "7585", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 1.0111, "percentile": 99.9, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 5.5285, "percentile": 98.1, "family": "velocity"}]}, {"id": 3509842, "day": 157.9243, "amount": 43570.85, "score": 0.99974, "probability": 0.22775, "isFraud": 0, "card": "6019", "device": "nan", "email": "gmail.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.1372, "percentile": 99.3, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 3.3581, "percentile": 96.0, "family": "velocity"}]}, {"id": 3577427, "day": 181.9757, "amount": 39898.93, "score": 0.99974, "probability": 0.22775, "isFraud": 0, "card": "7585", "device": "nan", "email": "gmail.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.1109, "percentile": 99.3, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 3.6704, "percentile": 96.6, "family": "velocity"}, {"feature": "card1_age", "value": 181.9231, "percentile": 99.9, "family": "velocity"}]}, {"id": 3437887, "day": 132.0273, "amount": 9711.0, "score": 0.99973, "probability": 0.22739, "isFraud": 0, "card": "15497", "device": "nan", "email": "nan", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.3572, "percentile": 99.6, "family": "contagion"}, {"feature": "C1", "value": 14.0, "percentile": 93.9, "family": "base"}, {"feature": "C13", "value": 92.0, "percentile": 94.6, "family": "base"}]}, {"id": 3531144, "day": 165.045, "amount": 8051.0, "score": 0.99973, "probability": 0.22739, "isFraud": 0, "card": "12544", "device": "nan", "email": "gmail.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.3742, "percentile": 99.6, "family": "contagion"}]}, {"id": 3494235, "day": 152.8003, "amount": 8881.0, "score": 0.99972, "probability": 0.22731, "isFraud": 1, "card": "17111", "device": "nan", "email": "yahoo.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.4392, "percentile": 99.6, "family": "contagion"}]}, {"id": 3438442, "day": 132.3939, "amount": 9711.0, "score": 0.99971, "probability": 0.22724, "isFraud": 1, "card": "12970", "device": "nan", "email": "nan", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.5594, "percentile": 99.7, "family": "contagion"}]}, {"id": 3569276, "day": 178.9594, "amount": 8051.0, "score": 0.99972, "probability": 0.22724, "isFraud": 1, "card": "6550", "device": "nan", "email": "nan", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.3974, "percentile": 99.6, "family": "contagion"}, {"feature": "card1_age", "value": 178.9345, "percentile": 96.4, "family": "velocity"}]}, {"id": 3557916, "day": 174.5482, "amount": 82502.0, "score": 0.99961, "probability": 0.22658, "isFraud": 1, "card": "6344", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.0003, "percentile": 98.9, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 7.554, "percentile": 98.9, "family": "velocity"}, {"feature": "card1_age", "value": 174.4611, "percentile": 90.7, "family": "velocity"}]}, {"id": 3475755, "day": 146.5703, "amount": 2822.0, "score": 0.99966, "probability": 0.22658, "isFraud": 1, "card": "12932", "device": "nan", "email": "anonymous.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.3541, "percentile": 99.6, "family": "contagion"}, {"feature": "M4_code", "value": 2.0, "percentile": 90.4, "family": "base"}]}, {"id": 3562249, "day": 175.8913, "amount": 82502.0, "score": 0.99962, "probability": 0.22658, "isFraud": 1, "card": "13526", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.3411, "percentile": 99.6, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 6.3827, "percentile": 98.5, "family": "velocity"}, {"feature": "card1_age", "value": 175.639, "percentile": 92.4, "family": "velocity"}]}, {"id": 3461885, "day": 140.9762, "amount": 82502.0, "score": 0.99968, "probability": 0.22658, "isFraud": 1, "card": "13526", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.27, "percentile": 99.5, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 6.3577, "percentile": 98.4, "family": "velocity"}]}, {"id": 3454423, "day": 138.5112, "amount": 82502.0, "score": 0.99965, "probability": 0.22658, "isFraud": 1, "card": "13526", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.864, "percentile": 99.8, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 7.8386, "percentile": 99.0, "family": "velocity"}]}, {"id": 3498200, "day": 153.8614, "amount": 82502.0, "score": 0.99962, "probability": 0.22658, "isFraud": 1, "card": "6019", "device": "nan", "email": "aol.com", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 1.0257, "percentile": 99.9, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 6.3528, "percentile": 98.4, "family": "velocity"}]}, {"id": 3556430, "day": 173.8426, "amount": 82502.0, "score": 0.99961, "probability": 0.22658, "isFraud": 1, "card": "6344", "device": "nan", "email": "comcast.net", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.0003, "percentile": 98.9, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 7.5517, "percentile": 98.9, "family": "velocity"}]}, {"id": 3461866, "day": 140.9733, "amount": 82502.0, "score": 0.99967, "probability": 0.22658, "isFraud": 1, "card": "13526", "device": "nan", "email": "nan", "product": "W", "reasons": [{"feature": "client_contagion_7d", "value": 0.2701, "percentile": 99.5, "family": "contagion"}, {"feature": "addr1_amount_vs_mean", "value": 6.3665, "percentile": 98.4, "family": "velocity"}]}], "timeline": [{"day": 120.0, "intensity": 0.0017, "frauds": 39, "volume": 649}, {"day": 120.25, "intensity": 0.00121, "frauds": 11, "volume": 111}, {"day": 120.5, "intensity": 0.00045, "frauds": 27, "volume": 1008}, {"day": 120.75, "intensity": 0.00037, "frauds": 44, "volume": 1249}, {"day": 121.0, "intensity": 0.00048, "frauds": 13, "volume": 630}, {"day": 121.25, "intensity": 0.00159, "frauds": 19, "volume": 100}, {"day": 121.5, "intensity": 0.00053, "frauds": 14, "volume": 721}, {"day": 121.75, "intensity": 0.00037, "frauds": 18, "volume": 1056}, {"day": 122.0, "intensity": 0.0008, "frauds": 22, "volume": 764}, {"day": 122.25, "intensity": 0.0, "frauds": 9, "volume": 154}, {"day": 122.5, "intensity": 0.00137, "frauds": 25, "volume": 1104}, {"day": 122.75, "intensity": 0.0004, "frauds": 72, "volume": 1368}, {"day": 123.0, "intensity": 0.00101, "frauds": 20, "volume": 894}, {"day": 123.25, "intensity": 0.00151, "frauds": 4, "volume": 252}, {"day": 123.5, "intensity": 0.00075, "frauds": 31, "volume": 1525}, {"day": 123.75, "intensity": 0.00042, "frauds": 34, "volume": 1531}, {"day": 124.0, "intensity": 0.00011, "frauds": 49, "volume": 814}, {"day": 124.25, "intensity": 3e-05, "frauds": 9, "volume": 157}, {"day": 124.5, "intensity": 0.00124, "frauds": 34, "volume": 1111}, {"day": 124.75, "intensity": 0.00194, "frauds": 56, "volume": 1385}, {"day": 125.0, "intensity": 0.0, "frauds": 42, "volume": 767}, {"day": 125.25, "intensity": 9e-05, "frauds": 2, "volume": 126}, {"day": 125.5, "intensity": 0.00043, "frauds": 28, "volume": 976}, {"day": 125.75, "intensity": 0.00066, "frauds": 30, "volume": 1182}, {"day": 126.0, "intensity": 1e-05, "frauds": 19, "volume": 708}, {"day": 126.25, "intensity": 0.0, "frauds": 18, "volume": 164}, {"day": 126.5, "intensity": 0.00439, "frauds": 16, "volume": 1111}, {"day": 126.75, "intensity": 0.001, "frauds": 31, "volume": 1352}, {"day": 127.0, "intensity": 0.00159, "frauds": 24, "volume": 572}, {"day": 127.25, "intensity": 0.0, "frauds": 5, "volume": 81}, {"day": 127.5, "intensity": 0.00201, "frauds": 12, "volume": 775}, {"day": 127.75, "intensity": 0.00166, "frauds": 28, "volume": 1079}, {"day": 128.0, "intensity": 1e-05, "frauds": 30, "volume": 526}, {"day": 128.25, "intensity": 0.0, "frauds": 11, "volume": 83}, {"day": 128.5, "intensity": 0.00016, "frauds": 28, "volume": 665}, {"day": 128.75, "intensity": 0.00094, "frauds": 61, "volume": 1074}, {"day": 129.0, "intensity": 0.00013, "frauds": 32, "volume": 609}, {"day": 129.25, "intensity": 0.00248, "frauds": 2, "volume": 137}, {"day": 129.5, "intensity": 0.00059, "frauds": 24, "volume": 952}, {"day": 129.75, "intensity": 6e-05, "frauds": 37, "volume": 1109}, {"day": 130.0, "intensity": 5e-05, "frauds": 28, "volume": 650}, {"day": 130.25, "intensity": 0.00031, "frauds": 10, "volume": 125}, {"day": 130.5, "intensity": 0.00148, "frauds": 28, "volume": 932}, {"day": 130.75, "intensity": 0.0018, "frauds": 39, "volume": 1115}, {"day": 131.0, "intensity": 0.00078, "frauds": 29, "volume": 640}, {"day": 131.25, "intensity": 0.0, "frauds": 5, "volume": 140}, {"day": 131.5, "intensity": 0.00277, "frauds": 27, "volume": 899}, {"day": 131.75, "intensity": 0.00273, "frauds": 47, "volume": 1073}, {"day": 132.0, "intensity": 0.00093, "frauds": 38, "volume": 642}, {"day": 132.25, "intensity": 0.00719, "frauds": 17, "volume": 137}, {"day": 132.5, "intensity": 0.00094, "frauds": 30, "volume": 883}, {"day": 132.75, "intensity": 0.00272, "frauds": 51, "volume": 1025}, {"day": 133.0, "intensity": 0.00109, "frauds": 22, "volume": 517}, {"day": 133.25, "intensity": 0.00211, "frauds": 20, "volume": 155}, {"day": 133.5, "intensity": 0.00097, "frauds": 22, "volume": 985}, {"day": 133.75, "intensity": 0.00067, "frauds": 39, "volume": 1280}, {"day": 134.0, "intensity": 0.0002, "frauds": 24, "volume": 608}, {"day": 134.25, "intensity": 2e-05, "frauds": 8, "volume": 79}, {"day": 134.5, "intensity": 0.00101, "frauds": 22, "volume": 753}, {"day": 134.75, "intensity": 0.00135, "frauds": 36, "volume": 989}, {"day": 135.0, "intensity": 0.0, "frauds": 18, "volume": 479}, {"day": 135.25, "intensity": 0.0, "frauds": 0, "volume": 58}, {"day": 135.5, "intensity": 0.00184, "frauds": 13, "volume": 604}, {"day": 135.75, "intensity": 0.00143, "frauds": 42, "volume": 907}, {"day": 136.0, "intensity": 0.0, "frauds": 22, "volume": 713}, {"day": 136.25, "intensity": 0.00173, "frauds": 3, "volume": 156}, {"day": 136.5, "intensity": 0.00174, "frauds": 17, "volume": 799}, {"day": 136.75, "intensity": 0.00086, "frauds": 27, "volume": 1246}, {"day": 137.0, "intensity": 0.0, "frauds": 29, "volume": 735}, {"day": 137.25, "intensity": 0.00675, "frauds": 10, "volume": 145}, {"day": 137.5, "intensity": 0.0007, "frauds": 31, "volume": 904}, {"day": 137.75, "intensity": 0.00093, "frauds": 42, "volume": 1062}, {"day": 138.0, "intensity": 9e-05, "frauds": 10, "volume": 632}, {"day": 138.25, "intensity": 0.00415, "frauds": 5, "volume": 158}, {"day": 138.5, "intensity": 0.00254, "frauds": 16, "volume": 912}, {"day": 138.75, "intensity": 0.00054, "frauds": 30, "volume": 1067}, {"day": 139.0, "intensity": 0.00038, "frauds": 28, "volume": 556}, {"day": 139.25, "intensity": 0.00043, "frauds": 11, "volume": 129}, {"day": 139.5, "intensity": 0.00089, "frauds": 26, "volume": 911}, {"day": 139.75, "intensity": 0.00038, "frauds": 38, "volume": 1033}, {"day": 140.0, "intensity": 0.0, "frauds": 18, "volume": 591}, {"day": 140.25, "intensity": 0.0, "frauds": 14, "volume": 158}, {"day": 140.5, "intensity": 0.00342, "frauds": 50, "volume": 1015}, {"day": 140.75, "intensity": 0.00315, "frauds": 49, "volume": 1236}, {"day": 141.0, "intensity": 0.00044, "frauds": 22, "volume": 605}, {"day": 141.25, "intensity": 0.00191, "frauds": 16, "volume": 98}, {"day": 141.5, "intensity": 0.00265, "frauds": 23, "volume": 691}, {"day": 141.75, "intensity": 0.0005, "frauds": 42, "volume": 997}, {"day": 142.0, "intensity": 0.00025, "frauds": 23, "volume": 464}, {"day": 142.25, "intensity": 0.0, "frauds": 9, "volume": 92}, {"day": 142.5, "intensity": 0.00099, "frauds": 13, "volume": 578}, {"day": 142.75, "intensity": 0.00042, "frauds": 26, "volume": 930}, {"day": 143.0, "intensity": 3e-05, "frauds": 20, "volume": 567}, {"day": 143.25, "intensity": 0.00035, "frauds": 16, "volume": 135}, {"day": 143.5, "intensity": 0.00042, "frauds": 17, "volume": 848}, {"day": 143.75, "intensity": 0.00262, "frauds": 37, "volume": 1168}, {"day": 144.0, "intensity": 4e-05, "frauds": 24, "volume": 648}, {"day": 144.25, "intensity": 0.00014, "frauds": 6, "volume": 137}, {"day": 144.5, "intensity": 0.00048, "frauds": 14, "volume": 894}, {"day": 144.75, "intensity": 0.00115, "frauds": 23, "volume": 989}, {"day": 145.0, "intensity": 0.0, "frauds": 34, "volume": 598}, {"day": 145.25, "intensity": 0.00329, "frauds": 12, "volume": 180}, {"day": 145.5, "intensity": 0.0, "frauds": 15, "volume": 905}, {"day": 145.75, "intensity": 0.00079, "frauds": 37, "volume": 1307}, {"day": 146.0, "intensity": 0.00103, "frauds": 17, "volume": 603}, {"day": 146.25, "intensity": 4e-05, "frauds": 10, "volume": 134}, {"day": 146.5, "intensity": 0.0011, "frauds": 28, "volume": 900}, {"day": 146.75, "intensity": 0.00062, "frauds": 24, "volume": 1081}, {"day": 147.0, "intensity": 2e-05, "frauds": 14, "volume": 616}, {"day": 147.25, "intensity": 1e-05, "frauds": 2, "volume": 164}, {"day": 147.5, "intensity": 0.001, "frauds": 30, "volume": 1068}, {"day": 147.75, "intensity": 0.00204, "frauds": 40, "volume": 1212}, {"day": 148.0, "intensity": 0.002, "frauds": 28, "volume": 536}, {"day": 148.25, "intensity": 0.0, "frauds": 6, "volume": 79}, {"day": 148.5, "intensity": 0.0, "frauds": 6, "volume": 718}, {"day": 148.75, "intensity": 0.00115, "frauds": 26, "volume": 956}, {"day": 149.0, "intensity": 1e-05, "frauds": 9, "volume": 461}, {"day": 149.25, "intensity": 0.0, "frauds": 2, "volume": 97}, {"day": 149.5, "intensity": 0.00214, "frauds": 17, "volume": 631}, {"day": 149.75, "intensity": 0.00101, "frauds": 41, "volume": 1020}, {"day": 150.0, "intensity": 0.0, "frauds": 15, "volume": 622}, {"day": 150.25, "intensity": 0.00332, "frauds": 23, "volume": 174}, {"day": 150.5, "intensity": 0.00211, "frauds": 33, "volume": 1076}, {"day": 150.75, "intensity": 0.00226, "frauds": 28, "volume": 1229}, {"day": 151.0, "intensity": 0.00051, "frauds": 33, "volume": 786}, {"day": 151.25, "intensity": 0.0, "frauds": 12, "volume": 265}, {"day": 151.5, "intensity": 0.00105, "frauds": 31, "volume": 1425}, {"day": 151.75, "intensity": 0.00063, "frauds": 44, "volume": 1420}, {"day": 152.0, "intensity": 1e-05, "frauds": 15, "volume": 737}, {"day": 152.25, "intensity": 0.00076, "frauds": 9, "volume": 179}, {"day": 152.5, "intensity": 0.00094, "frauds": 22, "volume": 993}, {"day": 152.75, "intensity": 0.00066, "frauds": 80, "volume": 1196}, {"day": 153.0, "intensity": 0.0, "frauds": 23, "volume": 770}, {"day": 153.25, "intensity": 0.00021, "frauds": 10, "volume": 288}, {"day": 153.5, "intensity": 0.0, "frauds": 22, "volume": 1249}, {"day": 153.75, "intensity": 0.0016, "frauds": 39, "volume": 1476}, {"day": 154.0, "intensity": 1e-05, "frauds": 54, "volume": 714}, {"day": 154.25, "intensity": 0.0, "frauds": 6, "volume": 162}, {"day": 154.5, "intensity": 0.00279, "frauds": 39, "volume": 1113}, {"day": 154.75, "intensity": 0.00058, "frauds": 20, "volume": 1363}, {"day": 155.0, "intensity": 6e-05, "frauds": 10, "volume": 569}, {"day": 155.25, "intensity": 0.0, "frauds": 5, "volume": 113}, {"day": 155.5, "intensity": 0.00017, "frauds": 8, "volume": 816}, {"day": 155.75, "intensity": 0.00068, "frauds": 31, "volume": 1077}, {"day": 156.0, "intensity": 0.0003, "frauds": 10, "volume": 522}, {"day": 156.25, "intensity": 0.0, "frauds": 4, "volume": 96}, {"day": 156.5, "intensity": 0.00144, "frauds": 24, "volume": 638}, {"day": 156.75, "intensity": 0.00102, "frauds": 31, "volume": 1003}, {"day": 157.0, "intensity": 0.0004, "frauds": 13, "volume": 701}, {"day": 157.25, "intensity": 0.0, "frauds": 4, "volume": 120}, {"day": 157.5, "intensity": 0.00146, "frauds": 24, "volume": 978}, {"day": 157.75, "intensity": 0.00032, "frauds": 40, "volume": 1249}, {"day": 158.0, "intensity": 0.00074, "frauds": 43, "volume": 713}, {"day": 158.25, "intensity": 0.0, "frauds": 3, "volume": 152}, {"day": 158.5, "intensity": 0.00251, "frauds": 18, "volume": 821}, {"day": 158.75, "intensity": 0.00019, "frauds": 25, "volume": 1159}, {"day": 159.0, "intensity": 0.00071, "frauds": 18, "volume": 667}, {"day": 159.25, "intensity": 0.0, "frauds": 11, "volume": 133}, {"day": 159.5, "intensity": 0.00086, "frauds": 14, "volume": 958}, {"day": 159.75, "intensity": 0.00109, "frauds": 42, "volume": 1120}, {"day": 160.0, "intensity": 0.00102, "frauds": 7, "volume": 593}, {"day": 160.25, "intensity": 0.00045, "frauds": 6, "volume": 157}, {"day": 160.5, "intensity": 0.0008, "frauds": 14, "volume": 953}, {"day": 160.75, "intensity": 0.00016, "frauds": 41, "volume": 1151}, {"day": 161.0, "intensity": 0.0, "frauds": 17, "volume": 567}, {"day": 161.25, "intensity": 1e-05, "frauds": 14, "volume": 176}, {"day": 161.5, "intensity": 0.00034, "frauds": 41, "volume": 1087}, {"day": 161.75, "intensity": 0.00137, "frauds": 42, "volume": 1403}, {"day": 162.0, "intensity": 5e-05, "frauds": 44, "volume": 709}, {"day": 162.25, "intensity": 0.0, "frauds": 3, "volume": 113}, {"day": 162.5, "intensity": 0.00241, "frauds": 37, "volume": 870}, {"day": 162.75, "intensity": 0.00029, "frauds": 52, "volume": 1188}, {"day": 163.0, "intensity": 0.00015, "frauds": 22, "volume": 572}, {"day": 163.25, "intensity": 0.0, "frauds": 7, "volume": 149}, {"day": 163.5, "intensity": 0.00218, "frauds": 20, "volume": 1114}, {"day": 163.75, "intensity": 0.00157, "frauds": 28, "volume": 1153}, {"day": 164.0, "intensity": 0.0, "frauds": 17, "volume": 710}, {"day": 164.25, "intensity": 0.0, "frauds": 9, "volume": 149}, {"day": 164.5, "intensity": 0.00027, "frauds": 18, "volume": 969}, {"day": 164.75, "intensity": 0.00068, "frauds": 29, "volume": 1210}, {"day": 165.0, "intensity": 0.00048, "frauds": 34, "volume": 660}, {"day": 165.25, "intensity": 0.0, "frauds": 0, "volume": 168}, {"day": 165.5, "intensity": 0.00221, "frauds": 33, "volume": 947}, {"day": 165.75, "intensity": 0.00049, "frauds": 27, "volume": 1156}, {"day": 166.0, "intensity": 0.00073, "frauds": 31, "volume": 653}, {"day": 166.25, "intensity": 0.0, "frauds": 13, "volume": 163}, {"day": 166.5, "intensity": 0.00296, "frauds": 37, "volume": 1045}, {"day": 166.75, "intensity": 9e-05, "frauds": 38, "volume": 1159}, {"day": 167.0, "intensity": 0.00052, "frauds": 36, "volume": 626}, {"day": 167.25, "intensity": 0.0, "frauds": 8, "volume": 165}, {"day": 167.5, "intensity": 0.00138, "frauds": 17, "volume": 956}, {"day": 167.75, "intensity": 0.00144, "frauds": 55, "volume": 1201}, {"day": 168.0, "intensity": 0.00165, "frauds": 37, "volume": 655}, {"day": 168.25, "intensity": 0.00171, "frauds": 7, "volume": 162}, {"day": 168.5, "intensity": 0.0001, "frauds": 39, "volume": 1069}, {"day": 168.75, "intensity": 0.00118, "frauds": 63, "volume": 1305}, {"day": 169.0, "intensity": 0.0, "frauds": 23, "volume": 568}, {"day": 169.25, "intensity": 0.0, "frauds": 8, "volume": 90}, {"day": 169.5, "intensity": 0.0, "frauds": 35, "volume": 766}, {"day": 169.75, "intensity": 0.00305, "frauds": 35, "volume": 985}, {"day": 170.0, "intensity": 0.0, "frauds": 21, "volume": 498}, {"day": 170.25, "intensity": 0.0, "frauds": 5, "volume": 69}, {"day": 170.5, "intensity": 0.00054, "frauds": 15, "volume": 1023}, {"day": 170.75, "intensity": 0.00024, "frauds": 27, "volume": 1205}, {"day": 171.0, "intensity": 0.0, "frauds": 17, "volume": 839}, {"day": 171.25, "intensity": 0.0047, "frauds": 1, "volume": 155}, {"day": 171.5, "intensity": 0.00021, "frauds": 17, "volume": 956}, {"day": 171.75, "intensity": 0.00072, "frauds": 46, "volume": 1210}, {"day": 172.0, "intensity": 0.0, "frauds": 33, "volume": 712}, {"day": 172.25, "intensity": 0.0, "frauds": 4, "volume": 136}, {"day": 172.5, "intensity": 0.00068, "frauds": 55, "volume": 895}, {"day": 172.75, "intensity": 1e-05, "frauds": 50, "volume": 1123}, {"day": 173.0, "intensity": 0.0, "frauds": 30, "volume": 640}, {"day": 173.25, "intensity": 0.00138, "frauds": 1, "volume": 166}, {"day": 173.5, "intensity": 0.00014, "frauds": 29, "volume": 963}, {"day": 173.75, "intensity": 0.00091, "frauds": 27, "volume": 1068}, {"day": 174.0, "intensity": 0.0, "frauds": 8, "volume": 513}, {"day": 174.25, "intensity": 0.0, "frauds": 9, "volume": 179}, {"day": 174.5, "intensity": 0.00019, "frauds": 29, "volume": 850}, {"day": 174.75, "intensity": 0.00155, "frauds": 62, "volume": 1141}, {"day": 175.0, "intensity": 0.00011, "frauds": 54, "volume": 588}, {"day": 175.25, "intensity": 0.0017, "frauds": 10, "volume": 154}, {"day": 175.5, "intensity": 0.0007, "frauds": 19, "volume": 957}, {"day": 175.75, "intensity": 0.00108, "frauds": 62, "volume": 1333}, {"day": 176.0, "intensity": 0.00037, "frauds": 28, "volume": 519}, {"day": 176.25, "intensity": 0.0, "frauds": 7, "volume": 101}, {"day": 176.5, "intensity": 0.00042, "frauds": 33, "volume": 776}, {"day": 176.75, "intensity": 0.00169, "frauds": 41, "volume": 968}, {"day": 177.0, "intensity": 0.00079, "frauds": 13, "volume": 481}, {"day": 177.25, "intensity": 0.0, "frauds": 25, "volume": 87}, {"day": 177.5, "intensity": 0.0, "frauds": 29, "volume": 596}, {"day": 177.75, "intensity": 0.0007, "frauds": 21, "volume": 904}, {"day": 178.0, "intensity": 0.0, "frauds": 20, "volume": 471}, {"day": 178.25, "intensity": 0.0, "frauds": 7, "volume": 93}, {"day": 178.5, "intensity": 0.0017, "frauds": 18, "volume": 745}, {"day": 178.75, "intensity": 0.00216, "frauds": 21, "volume": 868}, {"day": 179.0, "intensity": 0.0, "frauds": 27, "volume": 507}, {"day": 179.25, "intensity": 0.0, "frauds": 1, "volume": 115}, {"day": 179.5, "intensity": 0.00105, "frauds": 39, "volume": 939}, {"day": 179.75, "intensity": 0.00076, "frauds": 31, "volume": 1057}, {"day": 180.0, "intensity": 0.0011, "frauds": 26, "volume": 614}, {"day": 180.25, "intensity": 0.0, "frauds": 3, "volume": 121}, {"day": 180.5, "intensity": 0.00186, "frauds": 36, "volume": 897}, {"day": 180.75, "intensity": 0.00053, "frauds": 57, "volume": 1107}, {"day": 181.0, "intensity": 0.00032, "frauds": 32, "volume": 558}, {"day": 181.25, "intensity": 0.00083, "frauds": 5, "volume": 179}, {"day": 181.5, "intensity": 0.0018, "frauds": 33, "volume": 961}, {"day": 181.75, "intensity": 0.00139, "frauds": 49, "volume": 1056}], "frontier": [{"netSaved": 48.582, "falseBlocks": 2, "blocked": 2, "reviewed": 15177, "recall": 0.7048, "pctExposure": 56.41, "reviewAt": 0.0468, "blockAt": 0.9997, "capacity": 15177}, {"netSaved": 48.13, "falseBlocks": 7, "blocked": 48, "reviewed": 14438, "recall": 0.6978, "pctExposure": 55.88, "reviewAt": 0.0602, "blockAt": 1.0, "capacity": 14438}, {"netSaved": 48.81, "falseBlocks": 27, "blocked": 175, "reviewed": 16089, "recall": 0.6962, "pctExposure": 56.67, "reviewAt": 0.0468, "blockAt": 1.0, "capacity": 16089}, {"netSaved": 49.149, "falseBlocks": 23, "blocked": 175, "reviewed": 15951, "recall": 0.7003, "pctExposure": 57.07, "reviewAt": 0.0468, "blockAt": 1.0, "capacity": 15951}, {"netSaved": 49.901, "falseBlocks": 216, "blocked": 709, "reviewed": 14608, "recall": 0.7066, "pctExposure": 57.94, "reviewAt": 0.1615, "blockAt": 1.0, "capacity": 14608}, {"netSaved": 49.935, "falseBlocks": 229, "blocked": 819, "reviewed": 14538, "recall": 0.7069, "pctExposure": 57.98, "reviewAt": 0.1626, "blockAt": 1.0, "capacity": 14538}, {"netSaved": 49.952, "falseBlocks": 226, "blocked": 797, "reviewed": 14571, "recall": 0.7069, "pctExposure": 58.0, "reviewAt": 0.1521, "blockAt": 0.998, "capacity": 14571}, {"netSaved": 49.95, "falseBlocks": 226, "blocked": 795, "reviewed": 14571, "recall": 0.7069, "pctExposure": 58.0, "reviewAt": 0.1708, "blockAt": 0.998, "capacity": 14571}, {"netSaved": 49.947, "falseBlocks": 231, "blocked": 769, "reviewed": 14538, "recall": 0.7066, "pctExposure": 57.99, "reviewAt": 0.1761, "blockAt": 0.9992, "capacity": 14538}, {"netSaved": 49.947, "falseBlocks": 231, "blocked": 769, "reviewed": 14538, "recall": 0.7066, "pctExposure": 57.99, "reviewAt": 0.1767, "blockAt": 0.9992, "capacity": 14538}, {"netSaved": 50.012, "falseBlocks": 248, "blocked": 933, "reviewed": 14538, "recall": 0.7074, "pctExposure": 58.07, "reviewAt": 0.1755, "blockAt": 0.9992, "capacity": 14538}, {"netSaved": 51.961, "falseBlocks": 236, "blocked": 864, "reviewed": 16453, "recall": 0.7247, "pctExposure": 60.33, "reviewAt": 0.1776, "blockAt": 0.9975, "capacity": 16453}, {"netSaved": 51.389, "falseBlocks": 397, "blocked": 1334, "reviewed": 12133, "recall": 0.3851, "pctExposure": 59.67, "reviewAt": 0.6853, "blockAt": 0.8524, "capacity": 12133}, {"netSaved": 51.481, "falseBlocks": 433, "blocked": 1405, "reviewed": 12213, "recall": 0.3876, "pctExposure": 59.77, "reviewAt": 0.6801, "blockAt": 0.8565, "capacity": 12213}, {"netSaved": 51.783, "falseBlocks": 435, "blocked": 1405, "reviewed": 12213, "recall": 0.3907, "pctExposure": 60.12, "reviewAt": 0.6787, "blockAt": 0.8559, "capacity": 12213}, {"netSaved": 53.107, "falseBlocks": 711, "blocked": 2268, "reviewed": 11830, "recall": 0.4714, "pctExposure": 61.66, "reviewAt": 0.6211, "blockAt": 0.8575, "capacity": 11830}, {"netSaved": 53.718, "falseBlocks": 726, "blocked": 2311, "reviewed": 11830, "recall": 0.4755, "pctExposure": 62.37, "reviewAt": 0.6211, "blockAt": 0.8578, "capacity": 11830}, {"netSaved": 53.718, "falseBlocks": 726, "blocked": 2311, "reviewed": 11830, "recall": 0.4755, "pctExposure": 62.37, "reviewAt": 0.6211, "blockAt": 0.8578, "capacity": 11830}, {"netSaved": 53.738, "falseBlocks": 749, "blocked": 2380, "reviewed": 11590, "recall": 0.4803, "pctExposure": 62.39, "reviewAt": 0.6207, "blockAt": 0.8593, "capacity": 11590}, {"netSaved": 53.865, "falseBlocks": 752, "blocked": 2386, "reviewed": 11830, "recall": 0.4824, "pctExposure": 62.54, "reviewAt": 0.6211, "blockAt": 0.8588, "capacity": 11830}, {"netSaved": 54.25, "falseBlocks": 865, "blocked": 2644, "reviewed": 11850, "recall": 0.5087, "pctExposure": 62.99, "reviewAt": 0.6636, "blockAt": 0.8758, "capacity": 11850}, {"netSaved": 54.718, "falseBlocks": 868, "blocked": 2660, "reviewed": 11850, "recall": 0.511, "pctExposure": 63.53, "reviewAt": 0.6636, "blockAt": 0.8683, "capacity": 11850}, {"netSaved": 56.984, "falseBlocks": 870, "blocked": 2624, "reviewed": 17600, "recall": 0.5519, "pctExposure": 66.16, "reviewAt": 0.7015, "blockAt": 0.9261, "capacity": 17600}, {"netSaved": 57.011, "falseBlocks": 893, "blocked": 2671, "reviewed": 17598, "recall": 0.5571, "pctExposure": 66.19, "reviewAt": 0.7015, "blockAt": 0.9267, "capacity": 17598}, {"netSaved": 57.121, "falseBlocks": 910, "blocked": 2720, "reviewed": 17572, "recall": 0.5571, "pctExposure": 66.32, "reviewAt": 0.7019, "blockAt": 0.9251, "capacity": 17572}, {"netSaved": 57.068, "falseBlocks": 909, "blocked": 2720, "reviewed": 17598, "recall": 0.5616, "pctExposure": 66.26, "reviewAt": 0.7015, "blockAt": 0.9243, "capacity": 17598}, {"netSaved": 57.068, "falseBlocks": 909, "blocked": 2720, "reviewed": 17598, "recall": 0.5616, "pctExposure": 66.26, "reviewAt": 0.7015, "blockAt": 0.9243, "capacity": 17598}, {"netSaved": 57.332, "falseBlocks": 979, "blocked": 2860, "reviewed": 17598, "recall": 0.5751, "pctExposure": 66.57, "reviewAt": 0.7015, "blockAt": 0.9274, "capacity": 17598}, {"netSaved": 58.087, "falseBlocks": 1599, "blocked": 3771, "reviewed": 17473, "recall": 0.6332, "pctExposure": 67.44, "reviewAt": 0.6319, "blockAt": 0.919, "capacity": 17473}, {"netSaved": 58.476, "falseBlocks": 1700, "blocked": 3972, "reviewed": 17600, "recall": 0.6271, "pctExposure": 67.9, "reviewAt": 0.6334, "blockAt": 0.8866, "capacity": 17600}, {"netSaved": 58.476, "falseBlocks": 1700, "blocked": 3972, "reviewed": 17600, "recall": 0.6271, "pctExposure": 67.9, "reviewAt": 0.6334, "blockAt": 0.8866, "capacity": 17600}, {"netSaved": 58.476, "falseBlocks": 1700, "blocked": 3972, "reviewed": 17600, "recall": 0.6271, "pctExposure": 67.9, "reviewAt": 0.6334, "blockAt": 0.8866, "capacity": 17600}, {"netSaved": 58.476, "falseBlocks": 1700, "blocked": 3972, "reviewed": 17600, "recall": 0.6271, "pctExposure": 67.9, "reviewAt": 0.6334, "blockAt": 0.8866, "capacity": 17600}, {"netSaved": 58.333, "falseBlocks": 1710, "blocked": 3972, "reviewed": 17598, "recall": 0.6287, "pctExposure": 67.73, "reviewAt": 0.6338, "blockAt": 0.8902, "capacity": 17598}, {"netSaved": 58.333, "falseBlocks": 1710, "blocked": 3972, "reviewed": 17598, "recall": 0.6287, "pctExposure": 67.73, "reviewAt": 0.6338, "blockAt": 0.8902, "capacity": 17598}, {"netSaved": 59.234, "falseBlocks": 1752, "blocked": 4172, "reviewed": 17515, "recall": 0.6423, "pctExposure": 68.78, "reviewAt": 0.6514, "blockAt": 0.9471, "capacity": 17515}, {"netSaved": 59.005, "falseBlocks": 1950, "blocked": 4324, "reviewed": 17449, "recall": 0.6388, "pctExposure": 68.51, "reviewAt": 0.7411, "blockAt": 0.9582, "capacity": 17449}, {"netSaved": 59.212, "falseBlocks": 1957, "blocked": 4355, "reviewed": 17452, "recall": 0.6436, "pctExposure": 68.75, "reviewAt": 0.7411, "blockAt": 0.9583, "capacity": 17452}, {"netSaved": 59.359, "falseBlocks": 1977, "blocked": 4394, "reviewed": 17453, "recall": 0.6472, "pctExposure": 68.92, "reviewAt": 0.7411, "blockAt": 0.9583, "capacity": 17453}, {"netSaved": 60.794, "falseBlocks": 2025, "blocked": 4535, "reviewed": 17372, "recall": 0.6822, "pctExposure": 70.59, "reviewAt": 0.8834, "blockAt": 0.9757, "capacity": 17372}, {"netSaved": 60.98, "falseBlocks": 2036, "blocked": 4535, "reviewed": 17517, "recall": 0.6809, "pctExposure": 70.8, "reviewAt": 0.8721, "blockAt": 0.9734, "capacity": 17517}, {"netSaved": 60.989, "falseBlocks": 2036, "blocked": 4535, "reviewed": 17517, "recall": 0.6809, "pctExposure": 70.81, "reviewAt": 0.8722, "blockAt": 0.9734, "capacity": 17517}, {"netSaved": 61.244, "falseBlocks": 2470, "blocked": 5209, "reviewed": 17517, "recall": 0.7204, "pctExposure": 71.11, "reviewAt": 0.7495, "blockAt": 0.9778, "capacity": 17517}, {"netSaved": 61.199, "falseBlocks": 2548, "blocked": 5316, "reviewed": 17517, "recall": 0.7199, "pctExposure": 71.06, "reviewAt": 0.7495, "blockAt": 0.9755, "capacity": 17517}, {"netSaved": 61.193, "falseBlocks": 2554, "blocked": 5327, "reviewed": 17516, "recall": 0.7194, "pctExposure": 71.05, "reviewAt": 0.7459, "blockAt": 0.9753, "capacity": 17516}, {"netSaved": 61.195, "falseBlocks": 2555, "blocked": 5327, "reviewed": 17596, "recall": 0.7198, "pctExposure": 71.05, "reviewAt": 0.7394, "blockAt": 0.9753, "capacity": 17596}, {"netSaved": 61.221, "falseBlocks": 2586, "blocked": 5368, "reviewed": 17600, "recall": 0.7227, "pctExposure": 71.08, "reviewAt": 0.743, "blockAt": 0.9757, "capacity": 17600}, {"netSaved": 61.222, "falseBlocks": 2633, "blocked": 5440, "reviewed": 17517, "recall": 0.7242, "pctExposure": 71.08, "reviewAt": 0.7448, "blockAt": 0.9751, "capacity": 17517}, {"netSaved": 61.233, "falseBlocks": 2635, "blocked": 5440, "reviewed": 17517, "recall": 0.7254, "pctExposure": 71.1, "reviewAt": 0.7495, "blockAt": 0.9755, "capacity": 17517}, {"netSaved": 61.332, "falseBlocks": 2878, "blocked": 5754, "reviewed": 17575, "recall": 0.7335, "pctExposure": 71.21, "reviewAt": 0.6904, "blockAt": 0.9765, "capacity": 17575}, {"netSaved": 61.304, "falseBlocks": 2916, "blocked": 5793, "reviewed": 17576, "recall": 0.7341, "pctExposure": 71.18, "reviewAt": 0.6936, "blockAt": 0.9768, "capacity": 17576}, {"netSaved": 61.346, "falseBlocks": 3016, "blocked": 5985, "reviewed": 17579, "recall": 0.7346, "pctExposure": 71.23, "reviewAt": 0.6032, "blockAt": 0.9731, "capacity": 17579}, {"netSaved": 62.157, "falseBlocks": 3277, "blocked": 6252, "reviewed": 17600, "recall": 0.7366, "pctExposure": 72.17, "reviewAt": 0.9169, "blockAt": 0.975, "capacity": 17600}, {"netSaved": 62.511, "falseBlocks": 3394, "blocked": 6432, "reviewed": 17600, "recall": 0.731, "pctExposure": 72.58, "reviewAt": 0.9198, "blockAt": 0.9759, "capacity": 17600}, {"netSaved": 62.337, "falseBlocks": 3615, "blocked": 6683, "reviewed": 17600, "recall": 0.7509, "pctExposure": 72.38, "reviewAt": 0.9198, "blockAt": 0.9759, "capacity": 17600}, {"netSaved": 62.5, "falseBlocks": 3577, "blocked": 6692, "reviewed": 17600, "recall": 0.7521, "pctExposure": 72.57, "reviewAt": 0.9193, "blockAt": 0.9835, "capacity": 17600}, {"netSaved": 62.613, "falseBlocks": 3875, "blocked": 7101, "reviewed": 17490, "recall": 0.7506, "pctExposure": 72.7, "reviewAt": 0.9139, "blockAt": 0.9731, "capacity": 17490}, {"netSaved": 62.532, "falseBlocks": 3986, "blocked": 7208, "reviewed": 17600, "recall": 0.7511, "pctExposure": 72.61, "reviewAt": 0.9168, "blockAt": 0.9745, "capacity": 17600}, {"netSaved": 62.557, "falseBlocks": 4021, "blocked": 7271, "reviewed": 17489, "recall": 0.7549, "pctExposure": 72.63, "reviewAt": 0.9142, "blockAt": 0.9735, "capacity": 17489}, {"netSaved": 62.525, "falseBlocks": 4074, "blocked": 7333, "reviewed": 17490, "recall": 0.7557, "pctExposure": 72.6, "reviewAt": 0.9142, "blockAt": 0.9732, "capacity": 17490}]}</script>
+<script>
+(function () {
+  const DATA = JSON.parse(document.getElementById("console-data").textContent);
+  const money = v => "₹" + v.toFixed(1) + "M";
+  const pct = v => (100 * v).toFixed(1) + "%";
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  document.getElementById("provenance").innerHTML =
+    "Trained to day 105 · policy set on days 105&ndash;120<br>" +
+    "<strong>Every figure measured on days 120&ndash;182</strong>, never seen in training";
+
+  const m = DATA.metrics, balanced = m.policies.balanced;
+  const tiles = [
+    { label: "Precision, top 100", value: m.detector.precision_at["100"].toFixed(2),
+      foot: "vs 0.09 without contagion", cls: "is-good" },
+    { label: "Net saved", value: money(balanced.net_saved / 1e6),
+      foot: pct(balanced.net_saved / balanced.exposure) + " of ₹" + DATA.meta.exposure + "M exposed",
+      cls: "is-good" },
+    { label: "PR-AUC", value: m.detector.pr_auc.toFixed(3),
+      foot: "base rate " + m.detector.base_rate.toFixed(3) + " · " +
+            (m.detector.pr_auc / m.detector.base_rate).toFixed(0) + "× chance", cls: "" },
+    { label: "False alarms", value: pct(m.sequential.observed_rate),
+      foot: "designed for 1.0% · empirically bounded", cls: "is-warn" },
+    { label: "Fraud rate when blocked", value: pct(m.sequential.fraud_rate_when_blocked),
+      foot: (m.sequential.fraud_rate_when_blocked / m.detector.base_rate).toFixed(1) + "× the background rate", cls: "" },
+  ];
+  document.getElementById("instruments").innerHTML = tiles.map(t => `
+    <div class="instrument ${t.cls}">
+      <div class="label">${t.label}</div>
+      <div class="value num">${t.value}</div>
+      <div class="foot">${t.foot}</div>
+    </div>`).join("");
+
+  document.getElementById("q-total").textContent = DATA.meta.transactions.toLocaleString();
+  const heat = s => s > .9995 ? "var(--heat-3)" : s > .998 ? "var(--heat-2)"
+                  : s > .99 ? "var(--heat-1)" : "var(--heat-0)";
+  const actionFor = s => s > .9995 ? ["block", "Block"] : s > .995 ? ["review", "Review"] : ["allow", "Allow"];
+
+  document.getElementById("queue-body").innerHTML = DATA.cases.map((c, i) => {
+    const [cls, verb] = actionFor(c.score);
+    const reasons = c.reasons.length ? c.reasons.map(r => `
+      <div class="reason">
+        <span class="dot ${r.family}"></span>
+        <span class="mono">${r.feature}</span>
+        <span class="num">${r.value}</span>
+        <span class="pct num">${r.percentile}th pctile</span>
+      </div>`).join("") : `<div class="reason"><span></span><span>No single feature stands out; the score is the combination.</span><span></span><span></span></div>`;
+    return `
+    <tr class="case" data-row="${i}" tabindex="0" role="button" aria-expanded="false">
+      <td><span class="stripe" style="background:${heat(c.score)}"></span></td>
+      <td><span class="mono">${c.id}</span><br><span style="font-size:11.5px;color:var(--ink-3)">card ${c.card} · ${c.email}</span></td>
+      <td class="right num">₹${c.amount.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
+      <td>
+        <div class="meter" title="${(100*c.score).toFixed(2)}th percentile">
+          <span style="width:${Math.max(3, 100*c.score)}%;background:${heat(c.score)}"></span>
+        </div>
+      </td>
+      <td><span class="chip ${cls}">${verb}</span></td>
+      <td><span class="chip ${c.isFraud ? "truth-fraud" : "truth-legit"}">${c.isFraud ? "Fraud" : "Legitimate"}</span></td>
+      <td class="right num">${c.day.toFixed(1)}</td>
+    </tr>
+    <tr class="detail" id="detail-${i}" hidden>
+      <td colspan="7"><div class="detail-inner">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:600;margin-bottom:9px">Evidence</div>
+        <div class="reasons">${reasons}</div>
+      </div></td>
+    </tr>`;
+  }).join("");
+
+  document.querySelectorAll("tr.case").forEach(row => {
+    const toggle = () => {
+      const detail = document.getElementById("detail-" + row.dataset.row);
+      const open = !detail.hidden;
+      detail.hidden = open;
+      row.setAttribute("aria-expanded", String(!open));
+    };
+    row.addEventListener("click", toggle);
+    row.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+    });
+  });
+
+  document.querySelectorAll("nav.tabs button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("nav.tabs button").forEach(b =>
+        b.setAttribute("aria-selected", String(b === btn)));
+      document.querySelectorAll(".panel").forEach(p =>
+        p.classList.toggle("active", p.id === "panel-" + btn.dataset.panel));
+    });
+  });
+
+  function svg(w, h, body) {
+    return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" style="min-width:640px;display:block" role="img">${body}</svg>`;
+  }
+
+  (function timeline() {
+    const T = DATA.timeline, W = 940, H = 300, L = 54, R = 16, TOP = 16, B = 38;
+    const xs = T.map(d => d.day), ints = T.map(d => d.intensity), frauds = T.map(d => d.frauds);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs);
+    const iMax = Math.max(...ints) * 1.12, fMax = Math.max(...frauds) * 1.12;
+    const X = v => L + (v - x0) / (x1 - x0) * (W - L - R);
+    const Y = v => TOP + (1 - v / iMax) * (H - TOP - B);
+    const Yf = v => TOP + (1 - v / fMax) * (H - TOP - B);
+    const line = T.map((d, i) => (i ? "L" : "M") + X(d.day).toFixed(1) + " " + Y(d.intensity).toFixed(1)).join(" ");
+    const area = line + ` L${X(x1).toFixed(1)} ${H - B} L${X(x0).toFixed(1)} ${H - B} Z`;
+    const bars = T.map(d => {
+      const w = Math.max(1.5, (W - L - R) / T.length - 1);
+      return `<rect x="${(X(d.day) - w / 2).toFixed(1)}" y="${Yf(d.frauds).toFixed(1)}" width="${w.toFixed(1)}" height="${(H - B - Yf(d.frauds)).toFixed(1)}" fill="var(--ink-3)" opacity=".26"/>`;
+    }).join("");
+    const grid = [0, .25, .5, .75, 1].map(f => {
+      const y = TOP + f * (H - TOP - B);
+      return `<line x1="${L}" y1="${y}" x2="${W - R}" y2="${y}" stroke="var(--line-soft)" stroke-width="1"/>
+              <text x="${L - 8}" y="${y + 4}" text-anchor="end" font-size="10.5" fill="var(--ink-3)">${((1 - f) * iMax).toFixed(2)}</text>`;
+    }).join("");
+    const ticks = [0, .25, .5, .75, 1].map(f => {
+      const d = x0 + f * (x1 - x0);
+      return `<text x="${X(d)}" y="${H - 14}" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">day ${d.toFixed(0)}</text>`;
+    }).join("");
+    document.getElementById("timeline-chart").innerHTML = svg(W, H, `
+      ${grid}${bars}
+      <defs><linearGradient id="ig" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--heat-2)" stop-opacity=".30"/>
+        <stop offset="100%" stop-color="var(--heat-2)" stop-opacity="0"/>
+      </linearGradient></defs>
+      <path d="${area}" fill="url(#ig)"/>
+      <path d="${line}" fill="none" stroke="var(--heat-2)" stroke-width="2" stroke-linejoin="round"/>
+      ${ticks}
+      <text x="${L}" y="${TOP - 3}" font-size="11" fill="var(--ink-2)" font-weight="600">contagion intensity</text>
+      <text x="${W - R}" y="${TOP - 3}" text-anchor="end" font-size="11" fill="var(--ink-3)">bars: frauds observed</text>`);
+  })();
+
+  (function policy() {
+    const F = DATA.frontier, slider = document.getElementById("policy-slider");
+    slider.max = String(F.length - 1);
+    slider.value = String(Math.floor(F.length / 2));
+    const W = 940, H = 300, L = 62, R = 20, TOP = 18, B = 42;
+    const xs = F.map(p => p.falseBlocks), ys = F.map(p => p.netSaved);
+    const x1 = Math.max(...xs) * 1.06, y0 = Math.min(...ys) * .96, y1 = Math.max(...ys) * 1.04;
+    const X = v => L + v / x1 * (W - L - R);
+    const Y = v => TOP + (1 - (v - y0) / (y1 - y0)) * (H - TOP - B);
+    const path = F.map((p, i) => (i ? "L" : "M") + X(p.falseBlocks).toFixed(1) + " " + Y(p.netSaved).toFixed(1)).join(" ");
+    const grid = [0, .25, .5, .75, 1].map(f => {
+      const y = TOP + f * (H - TOP - B);
+      return `<line x1="${L}" y1="${y}" x2="${W - R}" y2="${y}" stroke="var(--line-soft)"/>
+              <text x="${L - 8}" y="${y + 4}" text-anchor="end" font-size="10.5" fill="var(--ink-3)">₹${(y1 - f * (y1 - y0)).toFixed(0)}M</text>`;
+    }).join("");
+    const xticks = [0, .25, .5, .75, 1].map(f => `
+      <text x="${X(f * x1)}" y="${H - 16}" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">${Math.round(f * x1).toLocaleString()}</text>`).join("");
+
+    function render(idx) {
+      const p = F[idx];
+      document.getElementById("frontier-chart").innerHTML = svg(W, H, `
+        ${grid}${xticks}
+        <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2" opacity=".85"/>
+        ${F.map((q, i) => `<circle cx="${X(q.falseBlocks)}" cy="${Y(q.netSaved)}" r="${i === idx ? 7 : 3}" fill="${i === idx ? "var(--heat-2)" : "var(--accent)"}" opacity="${i === idx ? 1 : .5}"/>`).join("")}
+        <text x="${L}" y="${TOP - 4}" font-size="11" fill="var(--ink-2)" font-weight="600">net saved</text>
+        <text x="${W - R}" y="${H - 3}" text-anchor="end" font-size="11" fill="var(--ink-3)">good customers wrongly blocked</text>`);
+      document.getElementById("policy-readout").innerHTML = [
+        ["Net saved", money(p.netSaved)], ["Share of exposure", p.pctExposure.toFixed(1) + "%"],
+        ["Fraud caught", pct(p.recall)], ["Blocked", p.blocked.toLocaleString()],
+        ["Sent to review", p.reviewed.toLocaleString()], ["Wrongly blocked", p.falseBlocks.toLocaleString()],
+      ].map(([k, v]) => `<div><div class="k">${k}</div><div class="v num">${v}</div></div>`).join("");
+    }
+    slider.addEventListener("input", () => render(Number(slider.value)));
+    render(Number(slider.value));
+  })();
+
+  (function model() {
+    const fam = DATA.familyGain;
+    const colours = { contagion: "var(--heat-2)", velocity: "var(--accent)", base: "var(--ink-3)" };
+    const names = { contagion: "Contagion (ours)", velocity: "Velocity", base: "Transaction" };
+    const maxF = Math.max(...Object.values(fam));
+    document.getElementById("family-bars").innerHTML = Object.entries(fam)
+      .sort((a, b) => b[1] - a[1]).map(([k, v]) => `
+        <div class="bar-row">
+          <span>${names[k] || k}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${100 * v / maxF}%;background:${colours[k]}"></div></div>
+          <span class="right num">${(100 * v).toFixed(1)}%</span>
+        </div>`).join("");
+    document.getElementById("con-share").textContent = (100 * fam.contagion).toFixed(0) + "%";
+
+    const maxG = DATA.topFeatures[0].gain;
+    document.getElementById("feature-bars").innerHTML = DATA.topFeatures.slice(0, 10).map(f => `
+      <div class="bar-row">
+        <span class="mono" style="font-size:11.5px">${f.name}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${100 * f.gain / maxG}%;background:${colours[f.family]}"></div></div>
+        <span class="right num">${(100 * f.gain).toFixed(1)}%</span>
+      </div>`).join("");
+
+    const rows = [
+      ["Full system", DATA.metrics.detector.precision_at, "var(--heat-2)"],
+      ["Without contagion", DATA.metrics.baseline.precision_at, "var(--accent)"],
+    ];
+    const depths = ["100", "500", "1000", "5000"];
+    const W = 940, H = 260, L = 54, R = 16, TOP = 22, B = 40;
+    const bw = (W - L - R) / depths.length;
+    const Y = v => TOP + (1 - v) * (H - TOP - B);
+    let body = [0, .25, .5, .75, 1].map(f => {
+      const y = TOP + f * (H - TOP - B);
+      return `<line x1="${L}" y1="${y}" x2="${W - R}" y2="${y}" stroke="var(--line-soft)"/>
+              <text x="${L - 8}" y="${y + 4}" text-anchor="end" font-size="10.5" fill="var(--ink-3)">${((1 - f) * 100).toFixed(0)}%</text>`;
+    }).join("");
+    depths.forEach((d, i) => {
+      rows.forEach(([label, vals, colour], j) => {
+        const w = bw * 0.30, x = L + i * bw + bw * 0.16 + j * (w + 6);
+        const v = vals[d];
+        body += `<rect x="${x}" y="${Y(v)}" width="${w}" height="${H - B - Y(v)}" fill="${colour}" rx="3"/>
+                 <text x="${x + w / 2}" y="${Y(v) - 6}" text-anchor="middle" font-size="11" font-weight="600" fill="${colour}">${v.toFixed(2)}</text>`;
+      });
+      body += `<text x="${L + i * bw + bw / 2}" y="${H - 14}" text-anchor="middle" font-size="11" fill="var(--ink-3)">top ${Number(d).toLocaleString()}</text>`;
+    });
+    body += `<text x="${L}" y="${TOP - 6}" font-size="11" fill="var(--ink-2)" font-weight="600">precision at queue depth</text>`;
+    document.getElementById("compare-chart").innerHTML = svg(W, H, body);
+  })();
+})();
+</script>

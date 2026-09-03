@@ -1,0 +1,776 @@
+<title>R-Zero Architecture</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#f4f6f7; --sheet:#ffffff; --sunk:#eef2f4;
+  --rule:#d8e0e5; --rule-soft:#e7edf0;
+  --ink:#0c1418; --ink-2:#42555f; --ink-3:#778b96;
+  --accent:#0b7285; --accent-soft:#dcedf1;
+  --heat:#d9480f; --heat-soft:#fdece1;
+  --good:#1f7a38; --bad:#a92222;
+  --shadow:0 1px 2px rgba(12,20,24,.05),0 10px 30px rgba(12,20,24,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0e1317; --sheet:#151b21; --sunk:#1a222a;
+    --rule:#2a353d; --rule-soft:#212a32;
+    --ink:#e7eef2; --ink-2:#9dafba; --ink-3:#6d818d;
+    --accent:#3cb6cb; --accent-soft:#14313a;
+    --heat:#ff8a4c; --heat-soft:#2c1a11;
+    --good:#4fbb6c; --bad:#e66a6a;
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 10px 30px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0e1317; --sheet:#151b21; --sunk:#1a222a;
+  --rule:#2a353d; --rule-soft:#212a32;
+  --ink:#e7eef2; --ink-2:#9dafba; --ink-3:#6d818d;
+  --accent:#3cb6cb; --accent-soft:#14313a;
+  --heat:#ff8a4c; --heat-soft:#2c1a11;
+  --good:#4fbb6c; --bad:#e66a6a;
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 10px 30px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Source Serif 4",Georgia,serif;font-size:16.5px;line-height:1.66;
+  -webkit-font-smoothing:antialiased;
+}
+.sans{font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,monospace;font-size:.86em}
+.num{font-variant-numeric:tabular-nums}
+
+.page{max-width:1180px;margin:0 auto;padding:44px 24px 80px;display:grid;gap:44px}
+@media(min-width:1040px){.page{grid-template-columns:196px minmax(0,1fr)}}
+
+aside{font-family:"IBM Plex Sans",sans-serif;font-size:12.5px}
+@media(min-width:1040px){aside{position:sticky;top:24px;align-self:start;max-height:92vh;overflow:auto}}
+aside ol{list-style:none;margin:0;padding:0;display:grid;gap:1px;counter-reset:s}
+aside a{
+  display:grid;grid-template-columns:22px 1fr;gap:8px;
+  color:var(--ink-2);text-decoration:none;padding:5px 7px;border-radius:6px;
+}
+aside a:hover{background:var(--sunk);color:var(--ink)}
+aside a:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+aside a b{color:var(--ink-3);font-weight:500;font-variant-numeric:tabular-nums}
+
+.masthead{margin-bottom:6px}
+.eyebrow{
+  font-family:"IBM Plex Sans",sans-serif;font-size:11px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
+}
+h1{
+  font-family:"IBM Plex Sans",sans-serif;font-size:clamp(30px,4.4vw,44px);
+  font-weight:600;letter-spacing:-.03em;line-height:1.08;margin:10px 0 12px;
+  text-wrap:balance;max-width:19ch;
+}
+.standfirst{font-size:19px;line-height:1.58;color:var(--ink-2);max-width:56ch;margin:0}
+.byline{
+  font-family:"IBM Plex Sans",sans-serif;font-size:12.5px;color:var(--ink-3);
+  margin-top:20px;padding-top:14px;border-top:1px solid var(--rule);
+  display:flex;gap:22px;flex-wrap:wrap;
+}
+
+section{margin-top:52px;scroll-margin-top:20px}
+h2{
+  font-family:"IBM Plex Sans",sans-serif;font-size:12px;font-weight:600;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);
+  margin:0 0 4px;display:flex;gap:9px;align-items:baseline;
+}
+h2 b{color:var(--accent);font-weight:600}
+h3.title{
+  font-family:"IBM Plex Sans",sans-serif;font-size:clamp(21px,2.6vw,27px);
+  font-weight:600;letter-spacing:-.022em;margin:0 0 18px;line-height:1.2;
+  text-wrap:balance;max-width:26ch;
+}
+h4{
+  font-family:"IBM Plex Sans",sans-serif;font-size:15px;font-weight:600;
+  margin:30px 0 8px;letter-spacing:-.008em;
+}
+p{margin:0 0 15px;max-width:66ch}
+ul,ol.body{margin:0 0 15px;padding-left:22px;max-width:64ch}
+li{margin-bottom:7px}
+strong{font-weight:600}
+a{color:var(--accent)}
+
+.lede{font-size:18px;color:var(--ink-2);max-width:60ch}
+
+.callout{
+  background:var(--sheet);border:1px solid var(--rule);border-radius:10px;
+  padding:17px 19px;margin:22px 0;box-shadow:var(--shadow);max-width:70ch;
+}
+.callout.heat{border-left:3px solid var(--heat)}
+.callout.accent{border-left:3px solid var(--accent)}
+.callout.warn{border-left:3px solid var(--bad)}
+.callout h4{margin-top:0}
+.callout p:last-child{margin-bottom:0}
+
+.formula{
+  background:var(--sunk);border:1px solid var(--rule-soft);border-radius:9px;
+  padding:18px 20px;margin:20px 0;font-family:"IBM Plex Mono",monospace;
+  font-size:13.5px;line-height:1.85;overflow-x:auto;
+}
+.formula .where{
+  font-family:"Source Serif 4",serif;font-size:14.5px;color:var(--ink-2);
+  margin-top:12px;padding-top:12px;border-top:1px solid var(--rule-soft);line-height:1.6;
+}
+
+pre{
+  background:var(--sunk);border:1px solid var(--rule-soft);border-radius:9px;
+  padding:15px 17px;overflow-x:auto;margin:16px 0;
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;line-height:1.7;color:var(--ink-2);
+}
+pre b{color:var(--ink);font-weight:500}
+
+figure{margin:26px 0;padding:0}
+figure svg{max-width:100%;height:auto;display:block;color:var(--ink-2)}
+figcaption{
+  font-family:"IBM Plex Sans",sans-serif;font-size:12.5px;color:var(--ink-3);
+  margin-top:11px;max-width:64ch;line-height:1.55;
+}
+.figbox{
+  background:var(--sheet);border:1px solid var(--rule);border-radius:11px;
+  padding:22px;box-shadow:var(--shadow);overflow-x:auto;
+}
+
+.tablewrap{overflow-x:auto;margin:20px 0}
+table{border-collapse:collapse;width:100%;font-family:"IBM Plex Sans",sans-serif;font-size:13px;min-width:520px}
+caption{
+  caption-side:top;text-align:left;font-size:11px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding-bottom:9px;
+}
+th{
+  text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600;padding:8px 12px;border-bottom:1.5px solid var(--rule);
+}
+td{padding:8px 12px;border-bottom:1px solid var(--rule-soft);font-variant-numeric:tabular-nums}
+th.r,td.r{text-align:right}
+tr.hi td{background:var(--accent-soft);font-weight:600}
+tr.hi td:first-child{border-radius:5px 0 0 5px}
+tr.hi td:last-child{border-radius:0 5px 5px 0}
+
+.grid2{display:grid;gap:16px;margin:22px 0}
+@media(min-width:760px){.grid2{grid-template-columns:1fr 1fr}}
+.stat{
+  background:var(--sheet);border:1px solid var(--rule);border-radius:10px;
+  padding:15px 17px;box-shadow:var(--shadow);
+}
+.stat .k{font-family:"IBM Plex Sans",sans-serif;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.stat .v{font-family:"IBM Plex Sans",sans-serif;font-size:29px;font-weight:600;letter-spacing:-.03em;margin:5px 0 3px;font-variant-numeric:tabular-nums}
+.stat .n{font-size:13.5px;color:var(--ink-2);line-height:1.5}
+
+.ledger{display:grid;gap:11px;margin:22px 0;max-width:70ch}
+.ledger article{
+  display:grid;grid-template-columns:26px 1fr;gap:13px;
+  background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:15px 17px;
+}
+.ledger .n{
+  font-family:"IBM Plex Sans",sans-serif;font-size:12px;font-weight:600;
+  color:var(--bad);border:1.5px solid var(--bad);border-radius:50%;
+  width:24px;height:24px;display:grid;place-items:center;
+}
+.ledger h4{margin:0 0 5px;font-size:14.5px}
+.ledger p{margin:0;font-size:14.5px;color:var(--ink-2);max-width:none}
+.ledger p+p{margin-top:8px}
+
+footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--rule);font-family:"IBM Plex Sans",sans-serif;font-size:12.5px;color:var(--ink-3);max-width:68ch}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="page">
+<aside class="sans" aria-label="Contents">
+  <ol>
+    <li><a href="#s1"><b>01</b><span>What this is</span></a></li>
+    <li><a href="#s2"><b>02</b><span>The finding</span></a></li>
+    <li><a href="#s3"><b>03</b><span>The invention</span></a></li>
+    <li><a href="#s4"><b>04</b><span>Architecture</span></a></li>
+    <li><a href="#s5"><b>05</b><span>Data &amp; protocol</span></a></li>
+    <li><a href="#s6"><b>06</b><span>Results</span></a></li>
+    <li><a href="#s7"><b>07</b><span>Breaking it</span></a></li>
+    <li><a href="#s8"><b>08</b><span>What failed</span></a></li>
+    <li><a href="#s9"><b>09</b><span>Limits</span></a></li>
+    <li><a href="#s10"><b>10</b><span>The repository</span></a></li>
+  </ol>
+</aside>
+
+<main>
+<div class="masthead">
+  <div class="eyebrow">System design · Track 02, AI Risk Manager</div>
+  <h1>R-Zero: fraud as a contagion</h1>
+  <p class="standfirst">Card fraud is not a set of independent bad transactions. It is a
+  branching process with a half-life of minutes. Measuring that half-life produces a feature
+  family that doubles a strong detector — and a way to prove the gain is real.</p>
+  <div class="byline">
+    <span>Umar Bin Muzzafar</span>
+    <span>Dayananda Sagar University</span>
+    <span>IEEE-CIS · 590,540 transactions · 182 days</span>
+  </div>
+</div>
+
+<section id="s1">
+  <h2><b>01</b> What this is</h2>
+  <h3 class="title">A detector, a decision layer, and a price on every outcome</h3>
+  <p class="lede">Three questions, answered in order. Is this transaction risky? Have we seen
+  enough to act? And what is that action worth in rupees?</p>
+
+  <p>Most fraud systems answer only the first, hand a score to a threshold, and call the
+  threshold a policy. This system answers all three, and every number below is measured on
+  62 days of transactions the model never saw during training or tuning.</p>
+
+  <div class="grid2">
+    <div class="stat">
+      <div class="k">Precision, top 100</div>
+      <div class="v">0.89</div>
+      <div class="n">89 of the 100 highest-risk transactions are genuinely fraudulent, in a
+      stream where 3.4% are. Without the contagion features: 0.09.</div>
+    </div>
+    <div class="stat">
+      <div class="k">Net saved, balanced setting</div>
+      <div class="v">₹58.5M</div>
+      <div class="n">Out of ₹86.1M of fraud exposure in the test window — 67.9%. Ranking by
+      transaction size alone yields ₹42.4M.</div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <h4>A metric this document deliberately does not report</h4>
+    <p><strong>Accuracy.</strong> At a 3.4% fraud rate, a model that answers "not fraud" to
+    every transaction scores 96.6% accuracy and catches nothing. Accuracy is uninformative on
+    imbalanced data and its absence here is a choice, not an omission. Precision at a fixed
+    review depth, recall, PR-AUC and rupees are the metrics that survive contact with an
+    operations team.</p>
+  </div>
+</section>
+
+<section id="s2">
+  <h2><b>02</b> The finding</h2>
+  <h3 class="title">Fraud reproduces, and the rate is measurable</h3>
+
+  <p>A fraudster who finds a working card does not stop; they run more within the hour. A
+  technique that works gets repeated. Fraud arrives in outbreaks, not as scattered independent
+  events — yet almost every production system scores each transaction as though the previous
+  two hundred told it nothing.</p>
+
+  <p>Seismologists faced the same structure with earthquake aftershocks and solved it in the
+  1970s. The intensity of events at time <em>t</em> is a background rate plus a decaying
+  contribution from everything that already happened:</p>
+
+  <div class="formula">
+    λ(t) = μ · s(t) + Σ<sub>t<sub>i</sub> &lt; t</sub> α · e<sup>−β(t − t<sub>i</sub>)</sup>
+    <div class="where"><strong>μ</strong> is the background rate, <strong>s(t)</strong> the
+    ordinary daily rhythm of traffic, <strong>α</strong> how much each event lifts the
+    near-future rate, and <strong>β</strong> how quickly that lift fades. The ratio
+    <strong>R₀ = α / β</strong> is the mean number of further events each event causes — the
+    same reproduction number epidemiologists use, because a self-exciting point process and a
+    branching process are the same mathematical object.</div>
+  </div>
+
+  <p>Fitted on real labelled fraud, twice, on unrelated datasets:</p>
+
+  <div class="tablewrap">
+    <table>
+      <caption>The reproduction number of card fraud</caption>
+      <thead><tr><th>Dataset</th><th>Frauds</th><th>Window</th><th class="r">R₀</th><th class="r">95% interval</th><th class="r">Half-life</th></tr></thead>
+      <tbody>
+        <tr><td>ULB / Worldline, Europe 2013</td><td class="r">383</td><td>36.8 hours</td><td class="r">0.574</td><td class="r">0.507 – 0.622</td><td class="r">1.5 min</td></tr>
+        <tr class="hi"><td>IEEE-CIS / Vesta, US 2019</td><td class="r">20,663</td><td>182 days</td><td class="r">0.438</td><td class="r">0.423 – 0.453</td><td class="r">3.3 min</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Both are decisively below 1, so outbreaks die out rather than exploding — and both are
+  decisively above zero. A null model with no self-excitation, matched on event count and
+  daily rhythm, produced a maximum R₀ of 0.043 across 50 simulations against an observed
+  0.438.</p>
+
+  <div class="callout accent">
+    <h4>The consequence that matters</h4>
+    <p>The half-life is <strong>minutes</strong>. That single fact rules out an entire class of
+    architecture: a system that scores transactions in a nightly batch has already missed every
+    outbreak it was built to catch. It also means proximity to fraud cannot be a fixed property
+    of a graph — it has to be measured at a moment.</p>
+  </div>
+</section>
+
+<section id="s3">
+  <h2><b>03</b> The invention</h2>
+  <h3 class="title">Contagion features: the graph, multiplied by the clock</h3>
+
+  <p>Production fraud systems carry two kinds of derived signal. <strong>Graph features</strong>
+  are static — who is this account connected to, how large is its component, what is its
+  PageRank. <strong>Velocity features</strong> are purely temporal — how many transactions in
+  the last hour, how much spent today. Both are standard. Neither is multiplied by the other.</p>
+
+  <p>Section 02 is the reason they must be. A device that touched confirmed fraud four minutes
+  ago and the same device four weeks later are entirely different risks, and no static graph
+  feature can separate them.</p>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 860 300" role="img" aria-label="A transaction inherits risk from confirmed frauds that share one of its attributes, weighted down by how common the attribute is and by how long ago the fraud occurred.">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+          </marker>
+          <marker id="ahh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#d9480f"/>
+          </marker>
+        </defs>
+
+        <text x="14" y="20" font-size="11" font-family="IBM Plex Sans" fill="currentColor" opacity=".65">CONFIRMED FRAUDS, EARLIER</text>
+        <text x="640" y="20" font-size="11" font-family="IBM Plex Sans" fill="currentColor" opacity=".65">TRANSACTION NOW</text>
+
+        <rect x="14" y="38" width="140" height="34" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="84" y="59" font-size="12" text-anchor="middle" font-family="IBM Plex Mono" fill="currentColor">fraud · 4 min ago</text>
+        <rect x="14" y="120" width="140" height="34" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="84" y="141" font-size="12" text-anchor="middle" font-family="IBM Plex Mono" fill="currentColor">fraud · 6 days ago</text>
+        <rect x="14" y="202" width="140" height="34" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="84" y="223" font-size="12" text-anchor="middle" font-family="IBM Plex Mono" fill="currentColor">fraud · 4 min ago</text>
+
+        <rect x="300" y="38" width="150" height="34" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="375" y="59" font-size="12" text-anchor="middle" font-family="IBM Plex Mono" fill="currentColor">device fingerprint</text>
+        <rect x="300" y="120" width="150" height="34" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="375" y="141" font-size="12" text-anchor="middle" font-family="IBM Plex Mono" fill="currentColor">billing address</text>
+        <rect x="300" y="202" width="150" height="34" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="375" y="223" font-size="12" text-anchor="middle" font-family="IBM Plex Mono" fill="currentColor">email domain</text>
+        <text x="375" y="256" font-size="11" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor" opacity=".6">held by 180,000 others</text>
+
+        <rect x="632" y="120" width="150" height="34" rx="6" fill="#d9480f" fill-opacity=".1" stroke="#d9480f" stroke-width="1.6"/>
+        <text x="707" y="141" font-size="12" text-anchor="middle" font-family="IBM Plex Mono" fill="#d9480f">scored now</text>
+
+        <line x1="154" y1="55" x2="296" y2="55" stroke="currentColor" stroke-width="1.6" marker-end="url(#ah)"/>
+        <line x1="154" y1="137" x2="296" y2="137" stroke="currentColor" stroke-width="1.6" opacity=".45" marker-end="url(#ah)"/>
+        <line x1="154" y1="219" x2="296" y2="219" stroke="currentColor" stroke-width="1.6" opacity=".45" marker-end="url(#ah)"/>
+
+        <path d="M450 55 L540 55 L540 130 L628 130" fill="none" stroke="#d9480f" stroke-width="2.4" marker-end="url(#ahh)"/>
+        <path d="M450 137 L628 137" fill="none" stroke="#d9480f" stroke-width="1" opacity=".45" marker-end="url(#ahh)"/>
+        <path d="M450 219 L540 219 L540 146 L628 146" fill="none" stroke="currentColor" stroke-width="1" opacity=".3" marker-end="url(#ah)"/>
+
+        <text x="546" y="46" font-size="11" font-family="IBM Plex Sans" fill="#d9480f">strong — recent, rare</text>
+        <text x="546" y="128" font-size="11" font-family="IBM Plex Sans" fill="currentColor" opacity=".6">faded — 6 days old</text>
+        <text x="546" y="198" font-size="11" font-family="IBM Plex Sans" fill="currentColor" opacity=".55">negligible — shared by everyone</text>
+      </svg>
+    </div>
+    <figcaption>Risk reaches a transaction through the attributes it shares with earlier
+    confirmed frauds. Two discounts apply independently: elapsed time, and how common the
+    shared attribute is. A fraud four minutes ago on a rare device fingerprint dominates; the
+    same fraud on a shared email domain contributes almost nothing.</figcaption>
+  </figure>
+
+  <p>Formally, this is a Hawkes process running on the entity graph rather than on a single
+  event stream:</p>
+
+  <div class="formula">
+    contagion<sub>e</sub>(t) = Σ<sub>j ∈ frauds on e, confirmed before t</sub>
+    w(e) · e<sup>−β(t − t<sub>j</sub>)</sup>
+    <br><br>
+    w(e) = 1 / log( degree(e) + 5 )
+    <div class="where">Computed for nine entity families — card, full card signature, billing
+    address, client key, device, device-and-browser, sending email domain, receiving email
+    domain, screen resolution — at three decay rates with half-lives of roughly one hour, one
+    day and one week. Twenty-seven features in total. The weight <strong>w(e)</strong> is
+    Fraudar's camouflage discount: an attribute shared by hundreds of thousands of people
+    carries almost no identity, so it contributes almost nothing per event.</div>
+  </div>
+
+  <h4>Why three decay rates rather than one</h4>
+  <p>A card-testing burst and a slow mule ring do not live on the same clock. One resolves in
+  minutes; the other accumulates over a fortnight. A single window forces a choice between
+  them; running three in parallel lets the model decide which timescale matters for each
+  entity family. In the fitted model, the one-hour and seven-day variants of the same entity
+  are used differently and independently.</p>
+
+  <h4>The property that makes it shippable</h4>
+  <p>Because the kernel is exponential, the running total needs no history buffer and no
+  window. Between two events on the same entity it is one multiply; at an event it is one add:</p>
+
+  <pre>accumulated <b>*=</b> exp(-decay_rate * elapsed)
+accumulated <b>+=</b> weight</pre>
+
+  <p>That is <strong>O(1) per event</strong> — the same trick behind an exponential moving
+  average. The feature is therefore computable on a live stream, which given a half-life of
+  minutes is not an optimisation but a requirement.</p>
+</section>
+
+<section id="s4">
+  <h2><b>04</b> Architecture</h2>
+  <h3 class="title">Five stages, and a feedback loop that closes</h3>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 900 340" role="img" aria-label="Transactions flow through feature construction, a gradient-boosted detector, a sequential decision test and a cost-optimal policy to an action; confirmed outcomes feed back into the contagion state.">
+        <defs>
+          <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+          </marker>
+          <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#d9480f"/>
+          </marker>
+        </defs>
+
+        <rect x="10" y="86" width="112" height="52" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+        <text x="66" y="109" font-size="12.5" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor">transaction</text>
+        <text x="66" y="125" font-size="11" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor" opacity=".6">stream</text>
+
+        <rect x="166" y="70" width="128" height="84" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+        <text x="230" y="94" font-size="12.5" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor">features</text>
+        <text x="230" y="112" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono" fill="currentColor" opacity=".62">25 transaction</text>
+        <text x="230" y="126" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono" fill="currentColor" opacity=".62">72 velocity</text>
+        <text x="230" y="140" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono" fill="#d9480f">27 contagion</text>
+
+        <rect x="338" y="86" width="118" height="52" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+        <text x="397" y="107" font-size="12.5" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor">detector</text>
+        <text x="397" y="124" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono" fill="currentColor" opacity=".62">gradient boosting</text>
+
+        <rect x="500" y="86" width="126" height="52" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+        <text x="563" y="107" font-size="12.5" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor">sequential test</text>
+        <text x="563" y="124" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono" fill="currentColor" opacity=".62">evidence per client</text>
+
+        <rect x="670" y="86" width="112" height="52" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+        <text x="726" y="107" font-size="12.5" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor">policy</text>
+        <text x="726" y="124" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono" fill="currentColor" opacity=".62">cost-optimal</text>
+
+        <rect x="826" y="60" width="62" height="30" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="857" y="80" font-size="11.5" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor">allow</text>
+        <rect x="826" y="97" width="62" height="30" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="857" y="117" font-size="11.5" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor">review</text>
+        <rect x="826" y="134" width="62" height="30" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="857" y="154" font-size="11.5" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor">block</text>
+
+        <line x1="122" y1="112" x2="162" y2="112" stroke="currentColor" stroke-width="1.5" marker-end="url(#a2)"/>
+        <line x1="294" y1="112" x2="334" y2="112" stroke="currentColor" stroke-width="1.5" marker-end="url(#a2)"/>
+        <line x1="456" y1="112" x2="496" y2="112" stroke="currentColor" stroke-width="1.5" marker-end="url(#a2)"/>
+        <text x="476" y="104" font-size="10" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor" opacity=".6">score</text>
+        <line x1="626" y1="112" x2="666" y2="112" stroke="currentColor" stroke-width="1.5" marker-end="url(#a2)"/>
+        <text x="646" y="104" font-size="10" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor" opacity=".6">verdict</text>
+        <line x1="782" y1="112" x2="822" y2="112" stroke="currentColor" stroke-width="1.5" marker-end="url(#a2)"/>
+
+        <rect x="338" y="238" width="288" height="46" rx="7" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="4 3"/>
+        <text x="482" y="258" font-size="12.5" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor">confirmed outcomes</text>
+        <text x="482" y="274" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono" fill="currentColor" opacity=".62">chargebacks · analyst rulings</text>
+
+        <path d="M857 168 L857 261 L630 261" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+        <path d="M338 261 L230 261 L230 158" fill="none" stroke="#d9480f" stroke-width="2" marker-end="url(#a3)"/>
+        <text x="252" y="204" font-size="11" font-family="IBM Plex Sans" fill="#d9480f">updates contagion</text>
+        <text x="252" y="219" font-size="11" font-family="IBM Plex Sans" fill="#d9480f">state, 7-day lag</text>
+
+        <text x="10" y="316" font-size="11" font-family="IBM Plex Sans" fill="currentColor" opacity=".55">Solid: per-transaction path, O(1) per entity. Dashed: feedback, arrives days later.</text>
+      </svg>
+    </div>
+    <figcaption>The pipeline. The orange edge is what distinguishes this system: confirmed
+    outcomes do not merely retrain the model on a schedule, they update contagion state
+    continuously, so a fraud confirmed today changes the score of a related transaction
+    minutes later. Section 07 measures exactly how much of the system's value depends on that
+    edge existing.</figcaption>
+  </figure>
+
+  <h4>Stage 2 — features</h4>
+  <p>124 features in three families, all built in a single forward pass over time so a
+  transaction can only ever observe its own past. The velocity family is standard practice
+  computed carefully; the contagion family is described in section 03.</p>
+
+  <h4>Stage 3 — detector</h4>
+  <p>Gradient-boosted trees, early-stopped on a held-out window that is always later than the
+  training window and always earlier than the scoring window. Deliberately unexotic: the claim
+  of this project rests on the features, so the model is the one a competent team would reach
+  for first, and the comparison in section 06 is against the same model without contagion.</p>
+
+  <h4>Stage 4 — sequential test</h4>
+  <p>Rather than judging each transaction alone, evidence accumulates across a client's
+  transactions and a verdict is issued the moment it becomes conclusive — Wald's sequential
+  probability ratio test, whose stopping rule is provably the fastest for a given pair of
+  error rates. Section 08 records how that guarantee failed here and what replaced it.</p>
+
+  <h4>Stage 5 — policy</h4>
+  <p>Scores become actions under two hard constraints: a finite review queue, and a ceiling on
+  how much of the day's volume may be blocked automatically. Both bind on the final action,
+  and neither can be encoded away — an illegal policy is unrepresentable in the search space
+  rather than merely penalised.</p>
+
+  <div class="callout accent">
+    <h4>Every outcome has a price</h4>
+    <p>A missed fraud costs the transaction value plus the chargeback fee. A review costs an
+    analyst's time. Wrongly blocking a real customer costs a support contact <em>plus</em> the
+    probability that they never return — the term most cost models omit and the one that
+    dominates at scale. Because there is no single best trade-off between catching fraud and
+    stopping good customers, the system returns a frontier of 60 defensible settings and the
+    merchant chooses.</p>
+  </div>
+</section>
+
+<section id="s5">
+  <h2><b>05</b> Data &amp; protocol</h2>
+  <h3 class="title">A split designed so the numbers cannot flatter themselves</h3>
+
+  <p>IEEE-CIS (Vesta): 590,540 real card transactions over 182 continuous days, 20,663
+  confirmed frauds, one-second timestamps, and the entity columns — card, address, email
+  domain, device, browser, screen — the contagion features are built on.</p>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 860 210" role="img" aria-label="Days zero to seventy-five train the model, seventy-five to ninety stop it, ninety to one-twenty set the policy, and one-twenty to one-eighty-two is the reported test window.">
+        <rect x="20" y="52" width="230" height="40" rx="5" fill="currentColor" fill-opacity=".1" stroke="currentColor" stroke-width="1.2"/>
+        <text x="135" y="77" font-size="12.5" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor">learn</text>
+        <rect x="250" y="52" width="92" height="40" rx="5" fill="currentColor" fill-opacity=".05" stroke="currentColor" stroke-width="1.2"/>
+        <text x="296" y="77" font-size="12.5" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor">stop</text>
+        <rect x="342" y="52" width="150" height="40" rx="5" fill="currentColor" fill-opacity=".05" stroke="currentColor" stroke-width="1.2"/>
+        <text x="417" y="71" font-size="12.5" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor">calibrate</text>
+        <text x="417" y="86" font-size="10.5" text-anchor="middle" font-family="IBM Plex Sans" fill="currentColor" opacity=".6">policy + boundary</text>
+        <rect x="492" y="52" width="348" height="40" rx="5" fill="#d9480f" fill-opacity=".12" stroke="#d9480f" stroke-width="1.6"/>
+        <text x="666" y="71" font-size="12.5" text-anchor="middle" font-family="IBM Plex Sans" fill="#d9480f">report</text>
+        <text x="666" y="86" font-size="10.5" text-anchor="middle" font-family="IBM Plex Sans" fill="#d9480f" opacity=".85">never seen in any fitting step</text>
+
+        <line x1="20" y1="110" x2="840" y2="110" stroke="currentColor" stroke-width="1" opacity=".4"/>
+        <g font-size="11" font-family="IBM Plex Mono" fill="currentColor" opacity=".65" text-anchor="middle">
+          <text x="20" y="128">day 0</text><text x="250" y="128">75</text>
+          <text x="342" y="128">90</text><text x="492" y="128">120</text><text x="840" y="128">182</text>
+        </g>
+        <g stroke="currentColor" stroke-width="1" opacity=".4">
+          <line x1="20" y1="105" x2="20" y2="115"/><line x1="250" y1="105" x2="250" y2="115"/>
+          <line x1="342" y1="105" x2="342" y2="115"/><line x1="492" y1="105" x2="492" y2="115"/>
+          <line x1="840" y1="105" x2="840" y2="115"/>
+        </g>
+        <text x="20" y="168" font-size="12" font-family="IBM Plex Sans" fill="currentColor" opacity=".7">A second model repeats this shifted 30 days later, so the policy window is</text>
+        <text x="20" y="186" font-size="12" font-family="IBM Plex Sans" fill="currentColor" opacity=".7">itself scored by a model that never trained on it.</text>
+      </svg>
+    </div>
+    <figcaption>The protocol. Two models are fitted rather than one, because early-stopping on
+    a window and then scoring that same window is mildly optimistic — enough to matter when the
+    policy is chosen from those scores.</figcaption>
+  </figure>
+
+  <h4>Label lag</h4>
+  <p>In production nobody learns a transaction was fraudulent the instant it settles; a
+  chargeback arrives days or weeks later. A fraud therefore enters the contagion state only
+  <strong>seven days</strong> after it occurred. Setting that delay to zero improves every
+  number in this document and would be a lie.</p>
+
+  <h4>Causality</h4>
+  <p>Where two events share a timestamp, reads are served before writes, so a transaction can
+  never observe an outcome recorded at the same instant as itself — including its own. This is
+  a one-line ordering decision with no visible effect on any headline number, and it is the
+  difference between a causal feature and a leaked one.</p>
+</section>
+
+<section id="s6">
+  <h2><b>06</b> Results</h2>
+  <h3 class="title">Measured on days 120 to 182, against the model without contagion</h3>
+
+  <div class="tablewrap">
+    <table>
+      <caption>Detection quality on the held-out window</caption>
+      <thead><tr><th>Metric</th><th class="r">Full system</th><th class="r">Same model, no contagion</th><th class="r">Random</th></tr></thead>
+      <tbody>
+        <tr class="hi"><td>Precision, top 100</td><td class="r">0.890</td><td class="r">0.090</td><td class="r">0.034</td></tr>
+        <tr><td>Precision, top 500</td><td class="r">0.892</td><td class="r">0.034</td><td class="r">0.034</td></tr>
+        <tr><td>Precision, top 1,000</td><td class="r">0.804</td><td class="r">0.028</td><td class="r">0.034</td></tr>
+        <tr><td>Precision, top 5,000</td><td class="r">0.549</td><td class="r">0.375</td><td class="r">0.034</td></tr>
+        <tr><td>PR-AUC</td><td class="r">0.466</td><td class="r">0.232</td><td class="r">0.034</td></tr>
+        <tr><td>ROC-AUC</td><td class="r">0.921</td><td class="r">0.820</td><td class="r">0.500</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <caption>Money, at three points on the evolved frontier</caption>
+      <thead><tr><th>Setting</th><th class="r">Blocked</th><th class="r">Reviewed</th><th class="r">Wrongly blocked</th><th class="r">Fraud caught</th><th class="r">Net saved</th></tr></thead>
+      <tbody>
+        <tr><td>Cautious</td><td class="r">2</td><td class="r">15,177</td><td class="r">2</td><td class="r">70%</td><td class="r">₹48.6M</td></tr>
+        <tr class="hi"><td>Balanced</td><td class="r">3,972</td><td class="r">17,600</td><td class="r">1,700</td><td class="r">63%</td><td class="r">₹58.5M</td></tr>
+        <tr><td>Aggressive</td><td class="r">7,333</td><td class="r">17,490</td><td class="r">4,074</td><td class="r">76%</td><td class="r">₹62.5M</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Against ₹86.1M of total fraud exposure in the window. Isolating the contribution of each
+  idea at the balanced setting: doing nothing saves ₹0, reviewing random transactions ₹9.9M,
+  reviewing the largest transactions ₹42.4M, the strong model without contagion ₹46.7M, and the
+  full system <strong>₹58.5M</strong>. Contagion is worth <strong>₹11.8M</strong> on top of a
+  model that already carries every standard feature.</p>
+
+  <div class="callout">
+    <h4>What the model leans on</h4>
+    <p>By split gain: transaction features 40.2%, velocity 24.2%, <strong>contagion
+    35.7%</strong> — from 27 of 124 features. The two strongest individual features in the
+    entire model are both contagion features.</p>
+  </div>
+
+  <p class="lede">Cost parameters — a ₹1,200 chargeback fee, ₹40 per review, ₹970 for wrongly
+  stopping a customer — are illustrative defaults, not a specific merchant's. Every rupee
+  figure moves with them, which is why they live in one editable object rather than scattered
+  through the code.</p>
+</section>
+
+<section id="s7">
+  <h2><b>07</b> Breaking it</h2>
+  <h3 class="title">A doubling is when you should suspect yourself</h3>
+
+  <p>The most common cause of a large jump in a fraud model is not a good idea; it is a feature
+  that has seen the future. Three attacks, run against our own headline.</p>
+
+  <h4>Attack 1 — shuffled labels</h4>
+  <p>Rebuild the identical contagion features from randomly permuted labels and retrain
+  everything else unchanged. Structure that leaks would survive this; a real signal cannot.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Contagion features built from</th><th class="r">PR-AUC</th></tr></thead>
+      <tbody>
+        <tr><td>nothing — family removed entirely</td><td class="r">0.2016</td></tr>
+        <tr><td>randomly shuffled labels</td><td class="r">0.1964</td></tr>
+        <tr class="hi"><td>real confirmed fraud</td><td class="r">0.4013</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Noise-built features land at 0.1964 — statistically indistinguishable from having no
+  contagion features at all. The entire gain comes from real fraud structure.</p>
+
+  <h4>Attack 2 — how fast must the feedback arrive?</h4>
+  <p>If the lift needs same-day labels it is a laboratory result. Varying the confirmation
+  delay: <span class="mono">0d → 0.652</span>, <span class="mono">7d → 0.401</span>,
+  <span class="mono">21d → 0.387</span>, <span class="mono">45d → 0.259</span>,
+  <span class="mono">90d → 0.202</span>. It degrades gracefully and is still substantial at
+  three weeks. Every number in this document uses the seven-day figure.</p>
+
+  <h4>Attack 3 — cut the feedback loop entirely</h4>
+  <p>Deploy the system and never tell it about another fraud again. PR-AUC falls from 0.401 to
+  0.303, against 0.202 with no contagion at all — <strong>51% of the benefit survives with the
+  feedback loop dead</strong>. That belongs in the model card: this system needs a
+  confirmed-fraud feed, and fails gracefully rather than off a cliff without one.</p>
+
+  <div class="callout heat">
+    <h4>And 39 tests that try to make the features lie</h4>
+    <p>Among them: flipping a single transaction's outcome must not change that transaction's
+    own features by a single bit, at zero label lag — the hardest case. Simultaneous events
+    must be read before they are written. A longer confirmation delay must weaken the feature
+    monotonically. An attribute shared by everyone must contribute less per event than a rare
+    one. All 39 pass, and they run in under twenty seconds.</p>
+  </div>
+</section>
+
+<section id="s8">
+  <h2><b>08</b> What failed</h2>
+  <h3 class="title">Four claims that did not survive their own tests</h3>
+
+  <p>Each of these was believed, tested, and found wanting. They are recorded here because a
+  system whose every claim happened to hold is a system that was not tested hard enough.</p>
+
+  <div class="ledger">
+    <article>
+      <div class="n">1</div>
+      <div>
+        <h4>Careful machinery on an unmeasured signal</h4>
+        <p>The first working version had a sequential decision layer, a cost model and an
+        evolved policy frontier — sitting on a graph-propagation score of PR-AUC 0.14, when a
+        standard gradient booster reaches 0.23. Everything had been measured except whether the
+        thing at the centre was any good.</p>
+        <p><strong>Fixed:</strong> benchmark the detector against the obvious baseline first.
+        The same downstream machinery then went from ₹34.0M to ₹58.5M.</p>
+      </div>
+    </article>
+    <article>
+      <div class="n">2</div>
+      <div>
+        <h4>Wald's guarantee does not hold on client data</h4>
+        <p>The sequential test was designed for a 1% false-alarm rate and delivered
+        <strong>10.6%</strong>. Wald's theorem assumes each observation is independent
+        evidence; a single client's transactions are near-identical, so the same fact was
+        counted repeatedly and the statistic raced to the boundary.</p>
+        <p><strong>Fixed:</strong> keep the sequential structure, but set the boundary
+        empirically on held-out data instead of from the closed form. Now 2.14% against a 1%
+        target — better, still imperfect, and described in the model card as an empirical
+        bound that needs periodic recalibration rather than a theoretical guarantee.</p>
+      </div>
+    </article>
+    <article>
+      <div class="n">3</div>
+      <div>
+        <h4>The genetic algorithm does not find better policies</h4>
+        <p>Evolution was justified on the grounds that the policy space is non-differentiable
+        and multi-modal. Given an identical evaluation budget, random search matches it —
+        at four parameters and at ten.</p>
+        <p><strong>Fixed:</strong> the claim was narrowed to what the measurement supports.
+        NSGA-II returns <strong>60 evenly spaced operating points</strong> where random search
+        returns six clumped ones. It is a better menu, not a better optimum, and the test suite
+        keeps the honest converse as a passing assertion.</p>
+      </div>
+    </article>
+    <article>
+      <div class="n">4</div>
+      <div>
+        <h4>Velocity features made the model worse</h4>
+        <p>Adding 72 causal history features dropped PR-AUC from 0.230 to 0.202. Removing the
+        features with the worst train-to-test drift did not recover it.</p>
+        <p><strong>Diagnosed:</strong> this dataset's own C and D columns are already
+        professionally engineered velocity features, so ours are redundant and contribute only
+        overfitting surface. This strengthens rather than weakens the central claim — contagion
+        adds its lift on top of a model that already has expert velocity features.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="s9">
+  <h2><b>09</b> Limits</h2>
+  <h3 class="title">What would have to be true before this ran on live money</h3>
+
+  <ul>
+    <li><strong>It is not state of the art as a detector.</strong> Heavily tuned ensembles on
+    this dataset score higher. The claim is a novel and <em>independent</em> source of lift
+    that stacks on whatever detector already exists — not that this model beats them.</li>
+    <li><strong>The false-alarm bound is empirical and drifts.</strong> 2.14% against a 1%
+    target, calibrated on one window and applied to the next. Production would need rolling
+    recalibration and an alarm when the achieved rate leaves its band.</li>
+    <li><strong>It requires a confirmed-fraud feed.</strong> Roughly half the contagion benefit
+    depends on outcomes flowing back within days. A merchant with slow chargeback reporting
+    gets the degraded version measured in section 07.</li>
+    <li><strong>Cost parameters are assumptions.</strong> Churn probability after a wrongful
+    block is the most consequential and the least observable number in the model. It should be
+    estimated from the merchant's own data, not guessed.</li>
+    <li><strong>Segment fairness is unmeasured.</strong> Contagion propagates through shared
+    attributes, and shared attributes correlate with geography and device affordability. A
+    disparate-impact audit across regions and price tiers is required before deployment and has
+    not been done.</li>
+    <li><strong>One dataset, one geography.</strong> R₀ replicates across two independent
+    datasets; the contagion lift has been measured on one. It should be re-measured on Indian
+    traffic before any number here is quoted to a merchant.</li>
+  </ul>
+</section>
+
+<section id="s10">
+  <h2><b>10</b> The repository</h2>
+  <h3 class="title">What is where, and how to reproduce every number</h3>
+
+  <pre><b>rzero/</b>
+  contagion.py     decayed history over the entity graph, O(1) per event
+  entities.py      identity construction and popularity weighting
+  features.py      the three feature families
+  detector.py      gradient-boosted model and evaluation
+  sequential.py    Wald's test, with empirical boundary calibration
+  economics.py     cost model and policy application
+  frontier.py      NSGA-II over the policy space
+  pipeline.py      end to end, with the temporal protocol fixed
+
+<b>tests/</b>          39 tests, all adversarial, ~20 seconds
+<b>docs/</b>           this document
+<b>console.html</b>    the operations console</pre>
+
+  <pre>pip install -r requirements.txt
+python -m pytest tests -q
+python -m rzero.pipeline data/ieee_slim.csv</pre>
+
+  <p>Every figure in this document is produced by that last command from the public IEEE-CIS
+  dataset. The random seed is fixed, and the temporal split is defined in one place at the top
+  of <span class="mono">pipeline.py</span>.</p>
+</section>
+
+<footer>
+  <p>Built for the Razorpay AI Buildathon, Track 02. The method draws on Ogata's epidemic-type
+  aftershock model, Wald's sequential probability ratio test, Hooi et al.'s camouflage-resistant
+  density measure, and Deb et al.'s NSGA-II. Data: IEEE-CIS Fraud Detection (Vesta Corporation)
+  and the ULB / Worldline credit-card dataset.</p>
+</footer>
+</main>
+</div>

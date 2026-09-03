@@ -1,0 +1,35 @@
+<section class="page" id="page-experiments" hidden>
+  <div class="wrap">
+    <div class="eyebrow">Experiments</div>
+    <h1 class="page-title">Fourteen experiments. Four of them failed, and one of the failures changed the design.</h1>
+    <p class="lede">A project where every claim held up was not tested hard enough. These are all of them, in the
+    order they were run, including the ones that went the wrong way and what the claim was narrowed to afterwards.</p>
+
+    <div class="band" style="padding-top:30px">
+      <div class="tiles">
+        <div class="tile good"><div class="k">Confirmed</div><div class="v num">10</div><div class="n">held up under attack</div></div>
+        <div class="tile hot"><div class="k">Failed</div><div class="v num">4</div><div class="n">kept in the record anyway</div></div>
+        <div class="tile"><div class="k">Adversarial tests</div><div class="v num">145</div><div class="n">running in ~28 seconds</div></div>
+        <div class="tile"><div class="k">Datasets</div><div class="v num">2</div><div class="n">independent, same conclusion</div></div>
+      </div>
+    </div>
+
+    <div class="band"><div id="exp-list"></div></div>
+
+    <div class="band">
+      <h2 class="sec">Where the model's attention actually goes</h2>
+      <p class="sec">Split of total gain across the three feature families, and the individual features that earn
+      the most. Two contagion features sit at the very top, which is the whole thesis in one chart.</p>
+      <div class="two">
+        <div class="panel"><div class="panel-body">
+          <div class="chart-title"><span>Gain by family</span><em>share of total</em></div>
+          <div id="fam-chart"></div>
+        </div></div>
+        <div class="panel"><div class="panel-body">
+          <div class="chart-title"><span>Top features by gain</span><em>contagion in orange</em></div>
+          <div id="imp-chart"></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>

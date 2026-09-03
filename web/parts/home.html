@@ -1,0 +1,358 @@
+<section class="page" id="page-home" hidden>
+  <div class="wrap">
+    <header class="hero">
+      <div class="eyebrow">Razorpay AI Buildathon &middot; Track 02</div>
+      <h1>Fraud spreads. So stop reading it one row at a time.</h1>
+      <p class="lede">A fraud team can only put about a hundred transactions in front of a human each day.
+      R-Zero decides which hundred. It measures how fast fraud spreads through the cards, addresses, emails and
+      devices an attacker shares, and turns that into a signal that stacks on top of whatever detector you already run.</p>
+      <div class="heroline">
+        <div class="bignum num" id="hero-num">0.89<small>of the top 100 flagged are genuinely fraudulent &mdash; full system, on 62 days it never saw</small></div>
+        <div class="sub">
+          <div><b class="num">0.438</b><span>each confirmed fraud causes this many more</span></div>
+          <div><b class="num">3.3 min</b><span>half-life of a fraud burst</span></div>
+          <div><b class="num">&#8377;58.5M</b><span>saved of &#8377;86.1M exposed</span></div>
+        </div>
+      </div>
+    </header>
+
+    <section class="band">
+      <div class="eyebrow mute">The nine ideas</div>
+      <h2 class="sec">Every concept in this build, and a thing you can pull on</h2>
+      <p class="sec">Nothing below is a stock illustration. Each panel runs the real formula in your browser,
+      beside the code it came from. Pull the sliders and watch what the system actually does.</p>
+
+      <article class="idea">
+        <header>
+          <span class="tag">Seismology &middot; Ogata 1988</span>
+          <h3>1. Fraud is a branching process</h3>
+          <p class="what">Every confirmed fraud makes more fraud nearby, soon, and then the effect fades. That is
+          the same object as an earthquake aftershock sequence, and it has a number: the branching ratio.</p>
+        </header>
+        <div class="idea-body">
+          <div class="idea-demo">
+            <div class="demo-label">Simulate a cascade</div>
+            <div class="field">
+              <label>Branching ratio R<sub>0</sub> <b id="br-v">0.438</b></label>
+              <input type="range" id="br-r0" min="5" max="140" step="1" value="44">
+            </div>
+            <div id="br-chart"></div>
+            <div class="readout">
+              <div><b id="br-total" class="num">0</b><span>total events from one seed</span></div>
+              <div><b id="br-gen" class="num">0</b><span>generations before it died</span></div>
+              <div><b id="br-state" class="hot">contained</b><span>outcome</span></div>
+            </div>
+            <div class="btnrow"><button class="ghost" id="br-run">Run it again</button></div>
+          </div>
+          <div class="idea-text">
+            <p>Set it below 1 and a burst dies out on its own. Set it above 1 and it never stops. Card fraud sits at
+            <b>0.438</b> on IEEE-CIS and <b>0.574</b> on an unrelated European card dataset, so bursts are real but
+            self-limiting, which is exactly the regime a defensive model should assume.</p>
+            <p>We fitted it by maximum likelihood on real transaction times rather than picking it. Shuffling those
+            times destroys the clustering and drives the estimate to zero: over 50 bootstrap resamples the shuffled
+            data never exceeded <b>0.043</b>.</p>
+            <code class="f"><span class="c"># the intensity of new fraud at time t</span>
+&#955;(t) = &#956; + &#931;  &#945;&#183;exp(&#8722;&#946;(t &#8722; t&#7522;))
+         over frauds already confirmed
+
+R&#8320; = &#945; / &#946;        <span class="c"># events caused per event</span>
+half-life = ln2 / &#946;</code>
+            <p class="where"><span class="mono">rzero/hawkes.py</span> &middot; fitted by profiling the likelihood over &#946;</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="idea">
+        <header>
+          <span class="tag">The core trick</span>
+          <h3>2. Exponential decay makes it O(1)</h3>
+          <p class="what">Because the kernel is exponential, the running total needs one multiply and one add per
+          event. No window, no history buffer, no nightly batch. That is the whole reason this can run live.</p>
+        </header>
+        <div class="idea-body">
+          <div class="idea-demo">
+            <div class="demo-label">Live contagion on one identity</div>
+            <div id="dec-chart"></div>
+            <div class="readout">
+              <div><b id="dec-1h" class="num hot">0.000</b><span>1-hour half-life</span></div>
+              <div><b id="dec-1d" class="num">0.000</b><span>1-day</span></div>
+              <div><b id="dec-7d" class="num">0.000</b><span>7-day</span></div>
+              <div><b id="dec-ops" class="num">0</b><span>operations used, total</span></div>
+            </div>
+            <div class="btnrow">
+              <button class="ghost" id="dec-add">Confirm a fraud on this card</button>
+              <button class="ghost" id="dec-reset">Reset</button>
+            </div>
+          </div>
+          <div class="idea-text">
+            <p>Three clocks run at once, with half-lives of an hour, a day and a week, because a card-testing burst
+            and a slow mule ring keep completely different time. The fast clock spikes and forgets; the slow one
+            remembers a week.</p>
+            <p>Watch the operation counter. It goes up by two per event no matter how long the identity's history
+            is, which is why <b>70,000 transactions a second</b> is possible in plain Python. A sliding window over
+            the same history would cost you the window.</p>
+            <code class="f"><span class="c"># the entire update, per identity, per event</span>
+elapsed = now &#8722; last_seen
+total  *= exp(&#8722;rate &#215; elapsed)   <span class="c"># one multiply</span>
+total  += weight                 <span class="c"># one add</span>
+last_seen = now</code>
+            <p class="where"><span class="mono">rzero/contagion.py</span> &middot; <span class="mono">_scan_events</span>, numba-compiled with a pure-Python fallback</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="idea">
+        <header>
+          <span class="tag">Fraudar &middot; Hooi et al. 2016</span>
+          <h3>3. Discount the crowd</h3>
+          <p class="what">An attribute shared by a hundred thousand people carries almost no identity. Weighting
+          every fraud by how common its identity is stops gmail.com from drowning out the signal.</p>
+        </header>
+        <div class="idea-body">
+          <div class="idea-demo">
+            <div class="demo-label">How much is one fraud worth on this identity?</div>
+            <div class="field">
+              <label>People sharing this attribute <b id="pw-d">3</b></label>
+              <input type="range" id="pw-r" min="0" max="1000" step="1" value="120">
+            </div>
+            <div id="pw-chart"></div>
+            <div class="readout">
+              <div><b id="pw-w" class="num hot">0.000</b><span>weight of one confirmed fraud</span></div>
+              <div><b id="pw-eg" style="font-size:14px;font-weight:500;line-height:1.4">&mdash;</b><span>real example from the data</span></div>
+            </div>
+          </div>
+          <div class="idea-text">
+            <p>Without this, the biggest email domain wins every time simply because more fraud passes through it.
+            In our data <b>gmail.com is shared by 172,786 transactions</b>, so one fraud on it moves the needle by
+            0.082. A device seen three times gets <b>0.481</b> &mdash; nearly six times as much &mdash; because it is
+            actually identifying.</p>
+            <p>The log is doing the work: it is aggressive on small counts, then almost flat, so a merchant with two
+            million transactions and one with five million are treated as equally anonymous, which they are.</p>
+            <code class="f">w(identity) = 1 / log(degree + 5)
+
+<span class="c"># gmail.com   172,786 seen &#8594; 0.082</span>
+<span class="c"># a device          3 seen &#8594; 0.481</span></code>
+            <p class="where"><span class="mono">rzero/entities.py</span> &middot; <span class="mono">popularity_weights</span></p>
+          </div>
+        </div>
+      </article>
+
+      <article class="idea">
+        <header>
+          <span class="tag">The shape of an attack</span>
+          <h3>4. The identity graph is what fraud travels along</h3>
+          <p class="what">A transaction is not a row. It is a point where a card, a billing address, an email
+          domain and a device meet, and every one of those is an edge to somebody else's transaction.</p>
+        </header>
+        <div class="idea-body">
+          <div class="idea-demo">
+            <div class="demo-label">Hover or tap an identity to see what it touches</div>
+            <div id="graph-chart"></div>
+            <div class="readout">
+              <div><b id="gr-name" style="font-size:15px;font-weight:600">the ring</b><span id="gr-note">twenty cards, one device, one address, ten minutes</span></div>
+            </div>
+          </div>
+          <div class="idea-text">
+            <p>Look at any single payment in that ring and it is unremarkable: a small amount, a card with no
+            history, nothing to flag. Look at the device and the whole thing is obvious. A model that scores rows
+            one at a time can never make that jump, no matter how many trees it has.</p>
+            <p>We build <b>nine identity families</b> in the full system &mdash; card, billing address, client,
+            full card fingerprint, device, device and OS, both email domains, and screen resolution &mdash; and the
+            browser model here uses the four that anyone can supply.</p>
+            <code class="f">ENTITY_KEYS = {
+  "card1", "addr1", "client", "card_full",
+  "device", "device_os", "pemail",
+  "remail", "screen",
+}</code>
+            <p class="where"><span class="mono">rzero/entities.py</span> &middot; identities are combined numerically, with an overflow guard</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="idea">
+        <header>
+          <span class="tag">The hard constraint</span>
+          <h3>5. A fraud is invisible until it is confirmed</h3>
+          <p class="what">Nobody knows a transaction was fraudulent at the moment it happens. The chargeback comes
+          back days later. Every number on this site respects that delay.</p>
+        </header>
+        <div class="idea-body">
+          <div class="idea-demo">
+            <div class="demo-label">Drag the delay and watch what the model can see</div>
+            <div class="field">
+              <label>Confirmation delay <b id="lag-v">7 days</b></label>
+              <input type="range" id="lag-r" min="0" max="45" step="1" value="7">
+            </div>
+            <div id="lag-chart"></div>
+            <div class="readout">
+              <div><b id="lag-pr" class="num">0.401</b><span>PR-AUC at this delay</span></div>
+              <div><b id="lag-note" style="font-size:13px;font-weight:500;line-height:1.4">&mdash;</b><span>what it means</span></div>
+            </div>
+          </div>
+          <div class="idea-text">
+            <p>This is the single easiest place to cheat, and the easiest to catch. If you let the model see
+            today's outcomes today, PR-AUC jumps to <b>0.652</b> and the whole thing is a laboratory result. We hold
+            it at seven days, which is what a real chargeback feed gives you, and report <b>0.401</b>.</p>
+            <p>The curve degrades gracefully rather than falling off a cliff, and even at a 45-day delay it is
+            still ahead of having no contagion at all. That matters because it means the system is useful before
+            the feedback loop is fast.</p>
+            <code class="f">contagion(entity, t)
+  = &#931;  w(entity)&#183;exp(&#8722;&#946;(t &#8722; t_fraud))
+    over frauds where
+    t_fraud + <span class="st">7 days</span> &lt; t</code>
+            <p class="where"><span class="mono">rzero/features.py</span> &middot; <span class="mono">DEFAULT_CONFIRMATION_DELAY_DAYS = 7.0</span></p>
+          </div>
+        </div>
+      </article>
+
+      <article class="idea">
+        <header>
+          <span class="tag">Wald 1943 &middot; and why we deleted it</span>
+          <h3>6. The damage is a clock, not a threshold</h3>
+          <p class="what">We spent a long time trying to calibrate a sequential test into behaving.
+          It never did, and the reason turned out to be that we were tuning the wrong dial entirely.</p>
+        </header>
+        <div class="idea-body">
+          <div class="idea-demo">
+            <div class="demo-label">How long before a human looks at the decision?</div>
+            <div class="field">
+              <label>Review latency <b id="lt-v">4 hours</b></label>
+              <input type="range" id="lt-r" min="0" max="7" step="1" value="2">
+            </div>
+            <div id="lt-chart"></div>
+            <div class="readout">
+              <div><b id="lt-txn" class="num hot">0.234%</b><span>of innocent customers' payments blocked</span></div>
+              <div><b id="lt-worst" class="num">5</b><span>worst case, one customer</span></div>
+              <div><b id="lt-rec" class="num good">21.3%</b><span>fraud caught &mdash; unchanged either way</span></div>
+            </div>
+          </div>
+          <div class="idea-text">
+            <p>Wald's sequential test promises a 1% false-alarm rate. Ours delivered 10.64%, so we
+            calibrated it on held-out data and got it to 2.14%. Then we noticed <b>1,172 of those
+            false alarms came from one innocent account</b>, and no amount of calibration touched it.</p>
+            <p>Eight attempts later &mdash; CUSUM, adaptive conformal control, precision-locked
+            integrators, even a test martingale with Ville's inequality &mdash; every single one
+            failed on the same handful of customers. The diagnosis: a per-decision guarantee applied
+            1,175 times is a per-customer guarantee of <b>99.996%</b>. The maths was never violated.
+            It was read as though it applied once.</p>
+            <p>So the threshold was the wrong dial. What actually bounds the damage is <b>how long a
+            wrong decision is allowed to stand</b>. Put a human in the loop and one mistake costs a
+            handful of payments instead of 1,172 &mdash; and, as the readout shows, it costs
+            <b>nothing at all in fraud caught</b>.</p>
+            <code class="f"><span class="c"># not a calibrated constant</span>
+worst case = review_latency &#215; transactions_per_day
+
+<span class="c"># 4 hours &#215; 2,786/day = 465 possible</span>
+<span class="c"># measured worst on held-out data: 5</span></code>
+            <p class="where"><span class="mono">rzero/queue.py</span> <p class="where"><span class="mono">rzero/queue.py</span> &middot; <span class="mono">ReviewDesk</span>, and 47 tests that try to break it on foreign data</p>middot; <span class="mono">ReviewDesk</span> <p class="where"><span class="mono">rzero/queue.py</span> &middot; <span class="mono">ReviewDesk</span>, and 47 tests that try to break it on foreign data</p>middot; 47 tests exist purely to break it on foreign data</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="idea">
+        <header>
+          <span class="tag">Gradient boosting</span>
+          <h3>7. 225 trees, and you can walk one</h3>
+          <p class="what">The features are the idea; the model on top is deliberately ordinary. Here is one real
+          tree from the shipped model, deciding one real transaction.</p>
+        </header>
+        <div class="idea-body">
+          <div class="idea-demo">
+            <div class="demo-label">A real tree, a real transaction, the real path</div>
+            <div id="tree-chart"></div>
+            <div class="readout">
+              <div><b id="tree-leaf" class="num">0.00</b><span>this tree's contribution</span></div>
+              <div><b id="tree-sum" class="num hot">0.00</b><span>all 225 trees, as a probability</span></div>
+            </div>
+            <div class="btnrow">
+              <button class="ghost" id="tree-next">Another transaction</button>
+              <button class="ghost" id="tree-tree">Another tree</button>
+            </div>
+          </div>
+          <div class="idea-text">
+            <p>Every node is one comparison. Walk down, land on a leaf, add its value, repeat 225 times, squash
+            through a sigmoid. That is the entire scoring path, and it is why the same model runs identically in
+            Python and in twelve lines of JavaScript.</p>
+            <p>We check that claim rather than asserting it: the browser reproduces the offline LightGBM scores to
+            <b>2.22e-16</b> on all 83,571 transactions, which is machine precision.</p>
+            <code class="f"><span class="kw">while</span> "leaf" <span class="kw">not in</span> node:
+  node = node.left <span class="kw">if</span> x[node.f] &lt;= node.t
+         <span class="kw">else</span> node.right
+total += node.value</code>
+            <p class="where"><span class="mono">rzero/detector.py</span> &middot; exported to JSON at full double precision</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="idea">
+        <header>
+          <span class="tag">NSGA-II &middot; Deb et al. 2002</span>
+          <h3>8. There is no single best policy, only a frontier</h3>
+          <p class="what">Blocking more fraud always means stopping more innocent customers. Rather than pick a
+          threshold, we hand the business the whole trade-off curve and let them stand where they want.</p>
+        </header>
+        <div class="idea-body">
+          <div class="idea-demo">
+            <div class="demo-label">Every point is a policy that nothing else beats on both axes</div>
+            <div id="pareto-chart"></div>
+            <div class="readout">
+              <div><b id="pa-net" class="num hot">&#8377;58.5M</b><span>net saved</span></div>
+              <div><b id="pa-fb" class="num">1,700</b><span>customers wrongly blocked</span></div>
+              <div><b id="pa-rec" class="num">63%</b><span>of fraud value stopped</span></div>
+            </div>
+          </div>
+          <div class="idea-text">
+            <p>An honest negative result lives here. We expected the genetic algorithm to find better policies than
+            random search, and at an equal budget <b>it did not &mdash; random search matched it</b>. What NSGA-II
+            actually earns is coverage: 60 evenly spread operating points instead of 6, so the curve you are
+            dragging along is smooth rather than lumpy.</p>
+            <p>We kept that failure in the README rather than deleting the section, because if every claim in a
+            project holds up, the project was not tested hard enough.</p>
+            <code class="f">objective(policy) &#8594; [
+  &#8722;net_saved,
+  n_false_blocks,
+]  <span class="c"># minimise both, keep the front</span></code>
+            <p class="where"><span class="mono">rzero/frontier.py</span> &middot; fronts, crowding distance, hypervolume</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="idea">
+        <header>
+          <span class="tag">The metric that matters</span>
+          <h3>9. Accuracy is the wrong scoreboard</h3>
+          <p class="what">Call everything legitimate and you are 96.6% accurate. What a fraud team actually
+          experiences is how many of today's hundred reviews were worth opening.</p>
+        </header>
+        <div class="idea-body">
+          <div class="idea-demo">
+            <div class="demo-label">One day's review queue, 100 slots</div>
+            <div class="btnrow" style="margin:0 0 14px">
+              <button class="ghost" id="q-base">Strong standard model</button>
+              <button class="ghost on" id="q-ours">Stacked with R-Zero</button>
+            </div>
+            <div class="queue-grid" id="q-grid"></div>
+            <div class="legend"><span><b style="background:var(--r2)"></b>real fraud</span><span><b style="background:var(--edge)"></b>innocent customer</span></div>
+            <div class="readout">
+              <div><b id="q-hits" class="num hot">89</b><span>of 100 were worth opening</span></div>
+              <div><b id="q-waste" class="num">1 h 2 m</b><span>analyst time spent on nothing</span></div>
+            </div>
+          </div>
+          <div class="idea-text">
+            <p>The Merchant Risk Council puts a manual fraud review at <b>5.6 minutes</b>. A hundred reviews is
+            nine hours and twenty minutes, which is more than one analyst's entire day. So the difference between
+            a queue that is 9% real and one that is 89% real is not a decimal point on a metric &mdash; it is
+            <b>eight and a half hours of somebody's Monday</b>.</p>
+            <p>This is why we report PR-AUC and precision at a fixed queue depth, never accuracy, and why the cost
+            model prices a wrongly stopped customer rather than counting errors.</p>
+            <code class="f">precision@100 = fraud in the top 100 / 100
+
+<span class="c"># standard model   9 / 100</span>
+<span class="c"># stacked         89 / 100</span></code>
+            <p class="where"><span class="mono">rzero/detector.py</span> &middot; <span class="mono">queue_precision</span>, and <span class="mono">rzero/economics.py</span> for the rupees</p>
+          </div>
+        </div>
+      </article>
+    </section>
+  </div>
+</section>

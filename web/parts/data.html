@@ -1,0 +1,98 @@
+<section class="page" id="page-data" hidden>
+  <div class="wrap">
+    <div class="eyebrow">The data</div>
+    <h1 class="page-title">590,540 real transactions, and the rules we imposed on ourselves</h1>
+    <p class="lede">Everything here is measured on IEEE-CIS Fraud Detection, released by Vesta Corporation:
+    six months of real card transactions with real outcomes. The branching ratio at the centre of the method was
+    then re-measured on a completely unrelated European dataset, to check it was not a quirk of one file.</p>
+
+    <div class="band" style="padding-top:34px">
+      <div class="tiles">
+        <div class="tile"><div class="k">Transactions</div><div class="v num" id="d-rows">—</div><div class="n">across 182 days</div></div>
+        <div class="tile hot"><div class="k">Fraudulent</div><div class="v num" id="d-fraud">—</div><div class="n" id="d-rate">—</div></div>
+        <div class="tile"><div class="k">Columns kept</div><div class="v num">36</div><div class="n">of 434 in the raw release</div></div>
+        <div class="tile"><div class="k">Identities</div><div class="v num">13,553</div><div class="n">distinct cards</div></div>
+      </div>
+    </div>
+
+    <div class="band">
+      <h2 class="sec">Volume and fraud, day by day</h2>
+      <p class="sec">The split lines are the only defence against fooling yourself. The model learns to the left of
+      the first line, stops early on the second slice, has its policy chosen on the third, and is measured on data
+      to the right that was never touched in any fitting step.</p>
+      <div id="daily-chart"></div>
+      <div class="scroll" style="margin-top:22px">
+        <table>
+          <thead><tr><th>Period</th><th>Days</th><th class="r">Transactions</th><th class="r">Frauds</th><th class="r">Base rate</th><th>Used for</th></tr></thead>
+          <tbody id="split-rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="band">
+      <h2 class="sec">The six columns the browser model uses</h2>
+      <p class="sec">The full system reads 36 columns and builds nine identity families. The model you can run in
+      the Model tab deliberately uses only these, because they are the six things any payments team already has,
+      which is what makes "paste your own file" a real offer rather than a demo.</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Column</th><th>Type</th><th class="r">Distinct</th><th class="r">Missing</th><th>Example</th><th>Becomes</th></tr></thead>
+          <tbody id="schema-rows"></tbody>
+        </table>
+      </div>
+      <p class="note warn" style="margin-top:24px"><strong>Missing is not the same as zero.</strong>
+      <span class="mono">DeviceInfo</span> is blank on 79.9% of rows. A blank identity contributes nothing and
+      receives nothing, and its history features are marked &minus;1 rather than imputed. Getting this wrong in the
+      browser port &mdash; JavaScript producing <span class="mono">NaN</span> where Python produced
+      <span class="mono">0</span> &mdash; silently corrupted 86% of rows before we caught it.</p>
+    </div>
+
+    <div class="band">
+      <h2 class="sec">A slice of what actually goes in</h2>
+      <p class="sec">These are consecutive rows from day 120, the first day of the held-out month the Model tab
+      streams. No cleaning, no imputation, no reordering.</p>
+      <div class="scroll"><table id="sample-table"></table></div>
+    </div>
+
+    <div class="band">
+      <h2 class="sec">The second dataset</h2>
+      <div class="two">
+        <div>
+          <p class="sec" style="margin-bottom:18px">A method that only works on one file is not a method. The
+          branching ratio was re-estimated from scratch on the ULB European card dataset &mdash; different
+          continent, different years, different acquirer, anonymised features, 284,807 transactions at a 0.17%
+          fraud rate.</p>
+          <p class="note good"><strong>0.574 against 0.438.</strong> Different magnitude, same shape: fraud
+          clusters in time in both, and both sit safely below 1. The estimator was not tuned between the two runs.</p>
+        </div>
+        <div class="panel"><div class="panel-body">
+          <div class="chart-title"><span>Branching ratio, both datasets</span><em>95% intervals</em></div>
+          <div id="data-r0-chart"></div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="band">
+      <h2 class="sec">What we could not use, and why</h2>
+      <p class="sec">Recorded because the negative results shaped the design as much as the positive ones.</p>
+      <div class="cards">
+        <div class="panel"><div class="panel-body">
+          <h3 class="sub">Elliptic++ &mdash; structurally unable to answer</h3>
+          <p style="font-size:13.5px;color:var(--ink-2);margin:0;line-height:1.62">A Bitcoin transaction graph, and
+          an obvious candidate for testing whether risk propagates across a time split. It cannot: <b>100% of its
+          edges lie within a single time step and none cross the train/test boundary</b>, so the propagation test is
+          impossible by construction. IEEE-CIS has 14.4% of identities appearing on both sides, against Elliptic's
+          1.3%. We diagnosed this and dropped the dataset rather than reporting a number from it.</p>
+        </div></div>
+        <div class="panel"><div class="panel-body">
+          <h3 class="sub">Blocked sources</h3>
+          <p style="font-size:13.5px;color:var(--ink-2);margin:0;line-height:1.62">Kaggle, HuggingFace, Zenodo and
+          UCI were all unreachable from the build environment. ULB was recovered through a GitHub mirror and
+          IEEE-CIS was downloaded by hand. Worth stating because it is the reason the repo ships a deterministic
+          rebuild script rather than a download link: <span class="mono">web/build_payload.py</span> regenerates
+          every artefact byte-for-byte from the CSV.</p>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,46 @@
+<title>R-Zero Live</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+__STYLES__
+</style>
+
+<nav class="nav">
+  <div class="wrap">
+    <span class="brand"><i>R0</i> R-Zero</span>
+    <div class="tabs" role="tablist">
+      <a href="#home" data-tab="home">Home</a>
+      <a href="#data" data-tab="data">Data</a>
+      <a href="#experiments" data-tab="experiments">Experiments</a>
+      <a href="#model" data-tab="model">Model</a>
+      <a href="#architecture" data-tab="architecture">Architecture</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+__HOME__
+__DATA__
+__EXPERIMENTS__
+__MODEL__PAGE__
+__ARCHITECTURE__
+</main>
+
+<footer class="wrap" style="padding:34px 24px 70px;font-size:12.5px;color:var(--ink-3);border-top:1px solid var(--edge)">
+  <p style="max-width:74ch;margin:0 0 8px">Built for the Razorpay AI Buildathon, Track 02. Data: IEEE-CIS Fraud
+  Detection (Vesta Corporation), replicated on the ULB European card dataset. Method after Ogata's epidemic-type
+  aftershock model, Wald's sequential probability ratio test, Hooi et al.'s camouflage-resistant weighting and
+  Deb et al.'s NSGA-II.</p>
+  <p style="max-width:74ch;margin:0">Cost parameters are illustrative defaults &mdash; &#8377;1,200 per chargeback,
+  &#8377;40 per review, &#8377;970 for wrongly stopping a customer. Every rupee figure moves with them. Nothing you
+  put into this page is uploaded anywhere.</p>
+</footer>
+
+<script id="model-json" type="application/json">__MODEL__</script>
+<script id="sample-json" type="application/json">__SAMPLE__</script>
+<script id="facts-json" type="application/json">__FACTS__</script>
+<script id="calib-json" type="application/json">__CALIB__</script>
+<script>
+(function () {
+__APPJS__
+})();
+</script>

@@ -1,0 +1,197 @@
+<section class="page" id="page-architecture" hidden>
+  <div class="wrap">
+    <div class="eyebrow">Architecture</div>
+    <h1 class="page-title">One object, two methods, and a hard rule about time</h1>
+    <p class="lede">The whole system is a small amount of state that answers questions about the present using only
+    what has already been confirmed. Everything else &mdash; the model, the policy, the money &mdash; is ordinary
+    machinery sitting on top of that one guarantee.</p>
+
+    <div class="band" style="padding-top:36px">
+      <h2 class="sec">The request path</h2>
+      <p class="sec">A transaction arrives and leaves with a decision. Contagion state is read before it is written,
+      which is the invariant everything else rests on: a transaction can never contribute to its own features.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 940 320" role="img" aria-label="A transaction flows through identity lookup, contagion read, feature assembly, scoring and policy, then out as a decision; confirmed chargebacks re-enter the contagion state seven days later."
+             fill="none" stroke="currentColor">
+          <defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" fill="currentColor" stroke="none"/>
+            </marker>
+            <marker id="arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" fill="var(--r2)" stroke="none"/>
+            </marker>
+          </defs>
+
+          <text x="20" y="26" font-size="12" fill="var(--ink-3)" stroke="none">SYNCHRONOUS &#183; sub-millisecond</text>
+
+          <rect x="20" y="44" width="128" height="62" rx="10" stroke="var(--edge)" fill="var(--card)"/>
+          <text x="84" y="70" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)" stroke="none">transaction</text>
+          <text x="84" y="88" text-anchor="middle" font-size="11" fill="var(--ink-3)" stroke="none">amount, card, device</text>
+
+          <rect x="196" y="44" width="128" height="62" rx="10" stroke="var(--edge)" fill="var(--card)"/>
+          <text x="260" y="70" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)" stroke="none">identities</text>
+          <text x="260" y="88" text-anchor="middle" font-size="11" fill="var(--ink-3)" stroke="none">9 families, hashed</text>
+
+          <rect x="372" y="44" width="128" height="62" rx="10" stroke="var(--r2)" fill="var(--r0)"/>
+          <text x="436" y="70" text-anchor="middle" font-size="13" font-weight="600" fill="var(--r3)" stroke="none">contagion</text>
+          <text x="436" y="88" text-anchor="middle" font-size="11" fill="var(--r3)" stroke="none">read, then decay</text>
+
+          <rect x="548" y="44" width="128" height="62" rx="10" stroke="var(--edge)" fill="var(--card)"/>
+          <text x="612" y="70" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)" stroke="none">225 trees</text>
+          <text x="612" y="88" text-anchor="middle" font-size="11" fill="var(--ink-3)" stroke="none">risk score</text>
+
+          <rect x="724" y="44" width="128" height="62" rx="10" stroke="var(--edge)" fill="var(--card)"/>
+          <text x="788" y="70" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)" stroke="none">policy</text>
+          <text x="788" y="88" text-anchor="middle" font-size="11" fill="var(--ink-3)" stroke="none">allow / review / block</text>
+
+          <line x1="148" y1="75" x2="188" y2="75" stroke="var(--ink-3)" marker-end="url(#ar)"/>
+          <line x1="324" y1="75" x2="364" y2="75" stroke="var(--ink-3)" marker-end="url(#ar)"/>
+          <line x1="500" y1="75" x2="540" y2="75" stroke="var(--ink-3)" marker-end="url(#ar)"/>
+          <line x1="676" y1="75" x2="716" y2="75" stroke="var(--ink-3)" marker-end="url(#ar)"/>
+          <text x="336" y="36" text-anchor="middle" font-size="10.5" fill="var(--ink-3)" stroke="none">look up</text>
+          <text x="512" y="36" text-anchor="middle" font-size="10.5" fill="var(--ink-3)" stroke="none">44 features</text>
+          <text x="688" y="36" text-anchor="middle" font-size="10.5" fill="var(--ink-3)" stroke="none">0 to 1</text>
+
+          <line x1="852" y1="75" x2="892" y2="75" stroke="var(--ink-3)" marker-end="url(#ar)"/>
+          <text x="900" y="70" font-size="11.5" font-weight="600" fill="var(--ink)" stroke="none">to the</text>
+          <text x="900" y="86" font-size="11.5" font-weight="600" fill="var(--ink)" stroke="none">gateway</text>
+
+          <line x1="20" y1="150" x2="920" y2="150" stroke="var(--edge)" stroke-dasharray="5 5"/>
+          <text x="20" y="180" font-size="12" fill="var(--ink-3)" stroke="none">ASYNCHRONOUS &#183; days later</text>
+
+          <rect x="724" y="198" width="128" height="62" rx="10" stroke="var(--edge)" fill="var(--card)"/>
+          <text x="788" y="224" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)" stroke="none">chargeback</text>
+          <text x="788" y="242" text-anchor="middle" font-size="11" fill="var(--ink-3)" stroke="none">outcome confirmed</text>
+
+          <rect x="372" y="198" width="128" height="62" rx="10" stroke="var(--r2)" fill="var(--r0)"/>
+          <text x="436" y="224" text-anchor="middle" font-size="13" font-weight="600" fill="var(--r3)" stroke="none">delay queue</text>
+          <text x="436" y="242" text-anchor="middle" font-size="11" fill="var(--r3)" stroke="none">holds 7 days</text>
+
+          <line x1="716" y1="229" x2="508" y2="229" stroke="var(--r2)" marker-end="url(#arh)"/>
+          <text x="612" y="219" text-anchor="middle" font-size="10.5" fill="var(--r2)" stroke="none">weight = 1 / log(degree + 5)</text>
+
+          <path d="M400 198 L400 118" stroke="var(--r2)" marker-end="url(#arh)"/>
+          <text x="356" y="162" text-anchor="end" font-size="10.5" fill="var(--r2)" stroke="none">adds, never during</text>
+          <text x="356" y="176" text-anchor="end" font-size="10.5" fill="var(--r2)" stroke="none">the 7-day window</text>
+
+          <text x="20" y="296" font-size="11.5" fill="var(--ink-3)" stroke="none">The only edge that crosses the dashed line is the delayed one. Nothing on the fast path waits for an outcome.</text>
+        </svg>
+        <figcaption>Scoring is synchronous and never blocks; outcomes rejoin the state only after the confirmation delay,
+        which is what makes every reported number reproducible offline.</figcaption>
+      </figure>
+    </div>
+
+    <div class="band">
+      <h2 class="sec">Read before write, at a tied timestamp</h2>
+      <p class="sec">Two transactions can share a second. If a contribution lands before a read at the same instant,
+      a transaction sees a fraud it could not have known about, and the whole result is quietly invalid. So every
+      event is sorted by time first and by kind second, with reads ordered ahead of writes.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 940 200" role="img" aria-label="At the same timestamp all observe events are processed before all contribute events, so no transaction can see a contribution made at its own instant."
+             fill="none" stroke="currentColor">
+          <line x1="40" y1="118" x2="900" y2="118" stroke="var(--edge)"/>
+          <text x="40" y="30" font-size="12" fill="var(--ink-3)" stroke="none">events at the very same timestamp t</text>
+
+          <rect x="120" y="60" width="118" height="44" rx="9" stroke="var(--brand)" fill="var(--brand-soft)"/>
+          <text x="179" y="87" text-anchor="middle" font-size="12" font-weight="600" fill="var(--brand)" stroke="none">OBSERVE  A</text>
+          <rect x="254" y="60" width="118" height="44" rx="9" stroke="var(--brand)" fill="var(--brand-soft)"/>
+          <text x="313" y="87" text-anchor="middle" font-size="12" font-weight="600" fill="var(--brand)" stroke="none">OBSERVE  B</text>
+          <rect x="424" y="60" width="128" height="44" rx="9" stroke="var(--r2)" fill="var(--r0)"/>
+          <text x="488" y="87" text-anchor="middle" font-size="12" font-weight="600" fill="var(--r3)" stroke="none">CONTRIBUTE  A</text>
+          <rect x="568" y="60" width="128" height="44" rx="9" stroke="var(--r2)" fill="var(--r0)"/>
+          <text x="632" y="87" text-anchor="middle" font-size="12" font-weight="600" fill="var(--r3)" stroke="none">CONTRIBUTE  B</text>
+
+          <line x1="179" y1="112" x2="179" y2="124" stroke="var(--brand)"/>
+          <line x1="313" y1="112" x2="313" y2="124" stroke="var(--brand)"/>
+          <line x1="488" y1="112" x2="488" y2="124" stroke="var(--r2)"/>
+          <line x1="632" y1="112" x2="632" y2="124" stroke="var(--r2)"/>
+
+          <text x="179" y="146" text-anchor="middle" font-size="11" fill="var(--ink-3)" stroke="none">reads state</text>
+          <text x="313" y="146" text-anchor="middle" font-size="11" fill="var(--ink-3)" stroke="none">reads state</text>
+          <text x="488" y="146" text-anchor="middle" font-size="11" fill="var(--ink-3)" stroke="none">writes state</text>
+          <text x="632" y="146" text-anchor="middle" font-size="11" fill="var(--ink-3)" stroke="none">writes state</text>
+
+          <text x="740" y="87" font-size="12" font-weight="600" fill="var(--ink)" stroke="none">sort key: (time, kind)</text>
+          <text x="740" y="146" font-size="11.5" fill="var(--ink-3)" stroke="none">kind 0 = read, kind 1 = write</text>
+          <text x="40" y="184" font-size="11.5" fill="var(--ink-3)" stroke="none">A test in the suite flips one transaction's outcome and asserts its own features do not move by a single bit.</text>
+        </svg>
+        <figcaption>Every observation at an instant is served before any contribution at that same instant.</figcaption>
+      </figure>
+    </div>
+
+    <div class="band">
+      <h2 class="sec">The temporal protocol</h2>
+      <p class="sec">Two models are trained rather than one, so no period is ever scored by a model that used it in
+      any capacity, including for early stopping. The policy is evolved on scores the final model produced for a
+      period it did not train on, then applied untouched.</p>
+      <div id="proto-chart"></div>
+    </div>
+
+    <div class="band">
+      <h2 class="sec">The state, exactly</h2>
+      <div class="two">
+        <div>
+          <p class="sec" style="margin-bottom:16px">Per identity, per decay rate, the system keeps two numbers: an
+          accumulator and the clock it was last touched. That is the whole of it. Everything else is derived.</p>
+          <code class="f">identity:
+  accumulated[3]   <span class="c"># one per half-life</span>
+  updated_at[3]    <span class="c"># when it last moved</span>
+  count, total     <span class="c"># plain history</span>
+  first_seen, last_seen</code>
+          <p class="note good" style="margin-top:20px"><strong>11,355 identities fit in 1.4 MB.</strong> A snapshot
+          is a plain dictionary, so a restart restores in one read and the object is trivially shardable by identity.</p>
+        </div>
+        <div class="panel"><div class="panel-body">
+          <h3 class="sub">Cost per event</h3>
+          <div class="scroll"><table>
+            <thead><tr><th>Operation</th><th class="r">Cost</th></tr></thead>
+            <tbody>
+              <tr><td>Decay an accumulator</td><td class="r mono">1 multiply</td></tr>
+              <tr><td>Add a confirmed fraud</td><td class="r mono">1 add</td></tr>
+              <tr><td>Read features for a transaction</td><td class="r mono">O(families)</td></tr>
+              <tr class="win"><td>Total, independent of history length</td><td class="r mono">O(1)</td></tr>
+              <tr><td>Measured, pure Python</td><td class="r mono">70,000/s</td></tr>
+              <tr><td>Measured, this browser tab</td><td class="r mono">~55,000/s</td></tr>
+            </tbody>
+          </table></div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="band">
+      <h2 class="sec">Four ways in</h2>
+      <p class="sec">In order of how little has to change on your side. Nothing here asks you to replace a detector.</p>
+      <div class="cards" id="paths"></div>
+      <p class="note warn" style="margin-top:26px"><strong>One honest difference between the offline pipeline and
+      production.</strong> The batch feature build weights each identity by how often it appears in the whole
+      dataset, which a live system cannot know. The streaming object uses the count it has seen so far. That costs
+      <strong>0.004 PR-AUC</strong> out of a contagion lift of 0.027 &mdash; measured, not assumed, in
+      <span class="mono">study_online_weights.py</span>.</p>
+    </div>
+
+    <div class="band">
+      <h2 class="sec">What we would fix first</h2>
+      <div class="three">
+        <div class="panel"><div class="panel-body">
+          <h3 class="sub">Cap repeated blocks</h3>
+          <p class="hint" style="font-size:13px">A settled block currently marks every later payment by that
+          customer, which let one account generate 1,172 false alarms. Capping repeats at three brings the
+          per-transaction rate to 0.88% but drops recall from 19.4% to 10.6%. That is a business decision, not an
+          engineering one, so it is exposed rather than chosen.</p>
+        </div></div>
+        <div class="panel"><div class="panel-body">
+          <h3 class="sub">Rolling recalibration</h3>
+          <p class="hint" style="font-size:13px">The boundary is an empirical bound and it drifts. It should be
+          refitted on a trailing window of confirmed outcomes on a schedule, with the achieved rate logged every
+          time so drift is visible before it is expensive.</p>
+        </div></div>
+        <div class="panel"><div class="panel-body">
+          <h3 class="sub">A fairness audit</h3>
+          <p class="hint" style="font-size:13px">Segment fairness is unmeasured. Contagion propagates along shared
+          attributes, and shared attributes correlate with geography and device cost, so a disparate-impact review
+          is required before this touches a real customer.</p>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>

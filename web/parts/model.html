@@ -1,0 +1,174 @@
+<section class="page" id="page-model" hidden>
+  <div class="wrap">
+    <div class="eyebrow">The model, running</div>
+    <h1 class="page-title">Feed it a stream. Watch every step.</h1>
+    <p class="lede">Nothing here is replayed. The identity graph, the contagion decay, the calibration and 374
+    trees all execute in this tab, in the order a live system would meet them. On the real sample the browser
+    reproduces the offline Python run to the sixteenth decimal place, and it says so when it finishes.</p>
+
+    <div class="band" style="padding-top:34px">
+      <div class="split">
+        <div>
+          <div class="stage panel">
+            <div class="panel-head">
+              <h3 id="stage-title">Live</h3>
+              <span class="pill"><i class="pip" id="pip"></i><span id="pip-text">idle</span></span>
+            </div>
+            <div class="progress"><i id="bar"></i></div>
+
+            <div class="steps" id="steps">
+              <div class="stepbox" id="step-1">
+                <div class="sh"><span class="n">1</span><b>Build identities and decay the past</b><span class="st" id="s1">waiting</span></div>
+                <p id="s1n">Every transaction is joined to its card, billing address, email domain and device, and each of those carries a decaying memory of confirmed fraud.</p>
+              </div>
+              <div class="stepbox" id="step-2">
+                <div class="sh"><span class="n">2</span><b>Hand the day's worst cases to a human</b><span class="st" id="s2">waiting</span></div>
+                <p id="s2n">There is no threshold to calibrate. The desk takes as many customers a day as you have analysts for, and a wrong call lasts only until somebody looks at it.</p>
+                <div id="cal-out" hidden></div>
+              </div>
+              <div class="stepbox" id="step-3">
+                <div class="sh"><span class="n">3</span><b>Rank the queue and price the decisions</b><span class="st" id="s3">waiting</span></div>
+                <p id="s3n">The remaining transactions are scored with that boundary in force, and every outcome carries a rupee value.</p>
+              </div>
+            </div>
+
+            <div class="charts">
+              <div>
+                <div class="chart-title"><span>Risk score as the stream runs</span><em id="live-note">rolling average, split by the outcome you supplied</em></div>
+                <div id="live-chart"></div>
+              </div>
+            </div>
+            <div class="charts two" id="result-charts" hidden>
+              <div>
+                <div class="chart-title"><span>Precision by queue depth</span><em>with vs without contagion</em></div>
+                <div id="prec-chart"></div>
+              </div>
+              <div>
+                <div class="chart-title"><span>Where the two classes land</span><em>score distribution</em></div>
+                <div id="dist-chart"></div>
+              </div>
+            </div>
+            <div id="result-table" hidden></div>
+            <div id="queue-wrap" hidden>
+              <div style="padding:20px 18px 0"><div class="chart-title"><span>The review queue</span><em id="queue-note">the twelve highest-risk transactions, and the identity that lit each one up</em></div></div>
+              <div id="queue"></div>
+            </div>
+            <div id="check" style="padding:0 18px 20px"></div>
+          </div>
+
+          <div class="tiles" id="tiles" style="margin-top:20px"></div>
+        </div>
+
+        <div class="panel" style="align-self:start;position:sticky;top:calc(var(--nav-h) + 18px)">
+          <div class="panel-head"><h3>Input</h3><span id="src-note">83,571 real transactions</span></div>
+          <div class="panel-body">
+            <div class="seg" role="group" aria-label="Data source">
+              <button data-src="sample" aria-pressed="true">Real sample</button>
+              <button data-src="simulate" aria-pressed="false">Simulate</button>
+              <button data-src="paste" aria-pressed="false">Your data</button>
+            </div>
+
+            <div id="pane-sample">
+              <p class="hint">Every transaction from days 120&ndash;150 of IEEE-CIS, in order, with its real outcome.
+              83,571 rows, 3.4% fraudulent, a month the model was never trained on and never validated against.</p>
+              <p class="hint" style="margin-top:10px">The engine boots from a state snapshot of day 120, exactly what a
+              live deployment holds in memory at start-up. 3,031 more confirmations are still in the post and land
+              mid-stream.</p>
+            </div>
+
+            <div id="pane-simulate" hidden>
+              <div class="field"><label>Transactions <b id="v-n">4,000</b></label>
+                <input type="range" id="s-n" min="800" max="14000" step="200" value="4000"></div>
+              <div class="field"><label>Fraud rate <b id="v-rate">3.5%</b></label>
+                <input type="range" id="s-rate" min="5" max="120" step="1" value="35"></div>
+              <div class="field"><label>Ring size <b id="v-ring">8 cards</b></label>
+                <input type="range" id="s-ring" min="1" max="40" step="1" value="8"></div>
+              <div class="field"><label>Burst tightness <b id="v-burst">12 min</b></label>
+                <input type="range" id="s-burst" min="1" max="240" step="1" value="12"></div>
+              <p class="hint">Rings share cards, devices and addresses and strike in bursts. A ring of 1 over 240
+              minutes is scattered lone fraud, which is the hardest case and the one contagion cannot help with.</p>
+            </div>
+
+            <div id="pane-paste" hidden>
+              <div class="drop" id="drop">
+                <input type="file" id="file" accept=".csv,.tsv,.txt,text/csv,text/plain" hidden>
+                <button type="button" class="pick" id="pick">Choose a CSV file</button>
+                <p>or drop one here. It is read in this tab and never uploaded anywhere.</p>
+              </div>
+              <div class="loaded" id="loaded" hidden>
+                <b id="loaded-name">file.csv</b><span id="loaded-rows"></span>
+                <button type="button" id="clear-file">use the example instead</button>
+              </div>
+              <p class="err" id="csv-err" hidden></p>
+              <div id="map-wrap" hidden>
+                <label class="check"><input type="checkbox" id="has-header"> first row is a header</label>
+                <div class="map-grid" id="map-grid"></div>
+              </div>
+              <details class="paste"><summary>or paste rows directly</summary>
+                <textarea id="s-csv" spellcheck="false"></textarea></details>
+              <p class="hint">Only <span class="mono">timestamp</span> is really needed; anything missing is treated
+              as unknown rather than guessed at. Under 200 rows the precision charts stay hidden, because a handful
+              of invented rows cannot produce a number that means anything.</p>
+            </div>
+
+            <div class="field" id="lag-field" hidden>
+              <label>Confirmation delay <b id="v-lag">7 days</b></label>
+              <select id="s-lag">
+                <option value="0.0417">1 hour &mdash; instant customer report</option>
+                <option value="0.25">6 hours</option>
+                <option value="1">1 day</option>
+                <option value="3">3 days</option>
+                <option value="7" selected>7 days &mdash; a typical chargeback</option>
+                <option value="21">21 days &mdash; a slow dispute cycle</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Review desk capacity <b id="v-cap">100 / day</b></label>
+              <input type="range" id="s-cap" min="5" max="400" step="5" value="100">
+            </div>
+            <div class="field">
+              <label>A human looks within <b id="v-lat">4 hours</b></label>
+              <input type="range" id="s-lat" min="0" max="7" step="1" value="2">
+            </div>
+
+            <button class="run" id="run">Run the stream</button>
+            <p class="hint" style="margin-top:11px" id="lag-note">Confirmed frauds enter the contagion state
+              <b>7 days</b> after they occur. Nothing inside that window can influence a score.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="band">
+      <div class="eyebrow mute">What it scores</div>
+      <h2 class="sec">The numbers this page is trying to earn</h2>
+      <p class="sec">Two models, and they should never be confused. The full nine-family system is the research
+      result. The four-column model running above is deliberately smaller, so that anyone can feed it their own file.</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Measured on days 120&ndash;182, held out</th><th class="r">Full system</th><th class="r">Same model, contagion removed</th><th class="r">Browser model</th><th class="r">Random</th></tr></thead>
+          <tbody>
+            <tr class="win"><td>Precision, top 100</td><td class="r">0.890</td><td class="r">0.090</td><td class="r">0.810</td><td class="r">0.034</td></tr>
+            <tr><td>Precision, top 1,000</td><td class="r">0.804</td><td class="r">0.028</td><td class="r">0.494</td><td class="r">0.034</td></tr>
+            <tr><td>PR-AUC</td><td class="r">0.466</td><td class="r">0.232</td><td class="r">0.208</td><td class="r">0.034</td></tr>
+            <tr><td>ROC-AUC</td><td class="r">0.921</td><td class="r">0.820</td><td class="r">0.808</td><td class="r">0.500</td></tr>
+            <tr><td>Net saved of &#8377;86.1M exposed</td><td class="r">&#8377;58.5M</td><td class="r">&#8377;46.7M</td><td class="r">&mdash;</td><td class="r">&#8377;9.9M</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note good" style="margin-top:24px"><strong>The decision layer changed, and the old
+      number went with it.</strong> A calibrated sequential test used to make the block decision, and
+      on held-out data it put <strong>2.265%</strong> of innocent customers' transactions on the floor
+      &mdash; <strong>1,172 of them from a single account</strong>, because an automatic block with no
+      human behind it never ends. Matched on the same recall, the review desk stops
+      <strong>0.234%</strong> and its worst case is <strong>5</strong>. That is 9.7&#215; less damage
+      and a 234&#215; smaller worst case, and none of it is calibrated: the ceiling is your desk
+      capacity and the damage is capped by your review latency.</p>
+      <p class="note warn" style="margin-top:20px"><strong>Why the browser model is smaller on purpose.</strong> It
+      uses only the six columns anyone can supply &mdash; time, amount, card, address, email, device &mdash; so it
+      reaches PR-AUC 0.208 where the full model reaches 0.466. On the 30 days it streams above it scores
+      <strong>0.217</strong>, against <strong>0.186</strong> for the identical model with the contagion features
+      deleted. Every number it shows you is computed in front of you.</p>
+    </div>
+  </div>
+</section>
