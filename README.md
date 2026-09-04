@@ -86,36 +86,6 @@ that ships in this repo.
 
 ---
 
-## What broke, and what we did about it
-
-**The result was too good, which scared me.** Adding the contagion features nearly doubled PR-AUC,
-and instead of celebrating I got suspicious, because a jump that size usually means the model has
-quietly seen the future rather than learnt anything real. So I rebuilt the exact same features from
-randomly shuffled labels and retrained; the entire gain vanished and landed back on top of the
-model that has no contagion at all. Something that was leaking would have survived that test, hence
-I now trust the number, and the experiment ships in the repo rather than sitting in my notes.
-
-**The maths that is guaranteed on paper was not guaranteed on real data.** Wald's sequential test
-promises a 1% false-alarm rate; ours delivered 10.64%, because the proof assumes every piece of
-evidence is independent and one customer's five payments in a row are obviously not. Calibrating
-the boundary on held-out data got it to 2.14%, and I thought that was the end of it.
-
-## The 2 a.m. one
-
-It was not the end of it. Late one night I broke the 2.14% down by customer instead of by
-transaction, and found that **1,172 of those false alarms, 32% of every false alarm in the entire
-test period, came from one single innocent account.** I spent the rest of that night trying to fix
-it properly, and failing: CUSUM with reset, CUSUM with decay, adaptive conformal control,
-precision-locked integrators, a budgeted rate governor, and finally a conformal test martingale
-under Ville's inequality, which is about as strong a guarantee as statistics offers. Every one of
-them failed on the same two customers. The diagnosis, when it finally came, was that a per-decision
-guarantee applied 1,175 times is a per-customer guarantee of 1−(1−α)ⁿ, which at 1% and 1,175 is
-99.996%; the theorem was never violated, I had just been reading it as though it applied once.
-So the threshold was never the thing to fix. What actually bounds the damage is how long a wrong
-decision is allowed to stand, and once a human sits between the decision and its permanence, one
-mistake costs a handful of payments instead of 1,172. Innocent payments blocked went from 2.265% to
-**0.234%** at the same recall, the worst single customer went from 1,172 to **5**, and none of it
-is calibrated, so there is nothing that has to transfer to anybody else's data.
 
 ---
 
